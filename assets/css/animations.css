@@ -1,0 +1,49 @@
+/* =====================================================================
+   [Company] Security — Animations & scroll reveals
+   ===================================================================== */
+[data-reveal]{opacity:0;transform:translateY(26px);
+  transition:opacity .7s var(--ease),transform .7s var(--ease)}
+[data-reveal].in{opacity:1;transform:none}
+[data-reveal][data-delay="1"]{transition-delay:.08s}
+[data-reveal][data-delay="2"]{transition-delay:.16s}
+[data-reveal][data-delay="3"]{transition-delay:.24s}
+[data-reveal][data-delay="4"]{transition-delay:.32s}
+[data-reveal][data-delay="5"]{transition-delay:.4s}
+
+@media(prefers-reduced-motion:reduce){
+  [data-reveal]{opacity:1!important;transform:none!important;transition:none!important}
+}
+
+/* Tilt hover */
+.tilt{transform-style:preserve-3d;transition:transform .25s var(--ease)}
+.tilt .tilt-inner{transform:translateZ(40px)}
+
+/* Shimmer line */
+.shimmer{position:relative;overflow:hidden}
+.shimmer::before{content:"";position:absolute;top:0;left:-60%;width:60%;height:100%;
+  background:linear-gradient(90deg,transparent,rgba(255,255,255,.14),transparent);
+  animation:shimmer 3.4s var(--ease) infinite}
+@keyframes shimmer{0%{left:-60%}60%,100%{left:120%}}
+
+/* Pulse ring (hero security node) */
+.pulse-ring{position:relative}
+.pulse-ring::after{content:"";position:absolute;inset:0;border-radius:50%;border:1px solid rgba(10,132,255,.5);
+  animation:pulsering 2.6s var(--ease) infinite}
+@keyframes pulsering{0%{transform:scale(.8);opacity:.8}100%{transform:scale(2.1);opacity:0}}
+
+/* Marquee */
+.marquee{display:flex;gap:14px;width:max-content;animation:marquee 32s linear infinite}
+.marquee:hover{animation-play-state:paused}
+@keyframes marquee{to{transform:translateX(-50%)}}
+
+/* Count-up entrance */
+.fade-up{animation:fadeUp .8s var(--ease) both}
+@keyframes fadeUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:none}}
+
+/* Page transition overlay */
+.page-fade{animation:pageIn .5s var(--ease) both}
+@keyframes pageIn{from{opacity:0}to{opacity:1}}
+
+@media(prefers-reduced-motion:reduce){
+  .shimmer::before,.pulse-ring::after,.marquee,.float-card{animation:none!important}
+}

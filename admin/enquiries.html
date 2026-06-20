@@ -1,0 +1,88 @@
+<!DOCTYPE html><html lang="en"><head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Enquiries — [Company] Security Admin</title><meta name="robots" content="noindex">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap">
+<link rel="stylesheet" href="../assets/css/style.css"><link rel="stylesheet" href="../assets/css/components.css"><link rel="stylesheet" href="assets/admin.css">
+<script>(function(){try{var o=sessionStorage.getItem("theme-override");var h=new Date().getHours();document.documentElement.setAttribute("data-theme",o||((h>=7&&h<19)?"light":"dark"));}catch(e){document.documentElement.setAttribute("data-theme","dark");}})();</script>
+</head><body>
+<div class="bg-orbs" aria-hidden="true"><span></span><span></span><span></span></div>
+<div class="admin-shell">
+  <aside class="admin-side">
+    <a class="brand" href="dashboard.html"><span class="mark"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></span><span>[Company]<small>Admin</small></span></a>
+    <nav class="admin-nav">
+      <a href="dashboard.html">📊 Dashboard</a>
+      <a href="enquiries.html" class="active">📨 Enquiries</a>
+      <a href="../index.html">🌐 View Site</a>
+      <a href="#" id="logoutBtn">⎋ Sign Out</a>
+    </nav>
+  </aside>
+  <main class="admin-main">
+    <div class="admin-top"><h1 style="font-size:1.6rem;margin:0">Enquiries</h1><button class="btn btn-glass" id="exportBtn">⬇ Export CSV</button></div>
+    <div class="toolbar">
+      <input id="search" placeholder="Search name, company, email, service…" style="flex:1;min-width:200px">
+      <select id="statusFilter"><option value="">All statuses</option><option>New</option><option>Contacted</option><option>In Progress</option><option>Proposal Sent</option><option>Closed</option></select>
+      <select id="sortSel"><option value="newest">Newest first</option><option value="oldest">Oldest first</option></select>
+    </div>
+    <div class="glass" style="padding:6px">
+      <div class="table-wrap">
+        <table class="data"><thead><tr>
+          <th>Ref</th><th>Date</th><th>Name</th><th>Company</th><th>Service</th><th>Email</th><th>Status</th><th></th>
+        </tr></thead><tbody id="rows"><tr><td colspan="8" style="text-align:center;color:var(--ink-4);padding:30px">Loading…</td></tr></tbody></table>
+      </div>
+    </div>
+    <p id="count" style="color:var(--ink-4);font-size:.85rem;margin-top:12px"></p>
+  </main>
+</div>
+<script src="assets/admin.js"></script>
+<script>
+ADMIN.guard();
+document.getElementById('logoutBtn').addEventListener('click', function(e){e.preventDefault();ADMIN.logout();});
+var CSRF = null; ADMIN.csrf().then(function(t){ CSRF = t; });
+var search = document.getElementById('search'), statusF = document.getElementById('statusFilter'), sortS = document.getElementById('sortSel');
+var STAT = ['New','Contacted','In Progress','Proposal Sent','Closed'];
+function esc(s){ return String(s==null?'':s).replace(/[<>&"]/g,function(c){return {'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;'}[c];}); }
+function cls(s){ return 's-' + String(s).replace(/ /g,''); }
+var timer;
+function debounce(fn){ clearTimeout(timer); timer = setTimeout(fn, 250); }
+function load() {
+  var qs = '?q=' + encodeURIComponent(search.value) + '&status=' + encodeURIComponent(statusF.value) + '&sort=' + sortS.value;
+  ADMIN.req('/enquiries' + qs).then(function (r) {
+    if (!r.ok) return; var list = r.body.enquiries || [];
+    document.getElementById('count').textContent = list.length + ' enquir' + (list.length===1?'y':'ies');
+    var tb = document.getElementById('rows');
+    if (!list.length) { tb.innerHTML = '<tr><td colspan="8" style="text-align:center;color:var(--ink-4);padding:30px">No enquiries found.</td></tr>'; return; }
+    tb.innerHTML = list.map(function (e) {
+      var opts = STAT.map(function(s){return '<option'+(s===e.status?' selected':'')+'>'+s+'</option>';}).join('');
+      return '<tr data-id="'+e.enquiry_id+'">'+
+        '<td><code>'+esc(e.reference||('#'+e.enquiry_id))+'</code></td>'+
+        '<td>'+esc((e.created_at||'').slice(0,16))+'</td>'+
+        '<td>'+esc(e.full_name)+'</td>'+
+        '<td>'+esc(e.company_name)+'</td>'+
+        '<td>'+esc(e.service)+'</td>'+
+        '<td><a href="mailto:'+esc(e.email)+'">'+esc(e.email)+'</a></td>'+
+        '<td><select class="status-pill '+cls(e.status)+'" data-status>'+opts+'</select></td>'+
+        '<td class="row-actions"><button class="icon-btn" data-del title="Delete">🗑</button></td></tr>';
+    }).join('');
+    tb.querySelectorAll('[data-status]').forEach(function (sel) {
+      sel.addEventListener('change', function () {
+        var id = sel.closest('tr').getAttribute('data-id');
+        ADMIN.req('/enquiries/'+id+'/status', { method:'PATCH', headers:{'X-CSRF-Token':CSRF}, body: JSON.stringify({status: sel.value}) })
+          .then(function(){ sel.className = 'status-pill ' + cls(sel.value); });
+      });
+    });
+    tb.querySelectorAll('[data-del]').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        var tr = btn.closest('tr'), id = tr.getAttribute('data-id');
+        if (!confirm('Delete this enquiry permanently?')) return;
+        ADMIN.req('/enquiries/'+id, { method:'DELETE', headers:{'X-CSRF-Token':CSRF} }).then(function(r){ if(r.ok) tr.remove(); });
+      });
+    });
+  });
+}
+search.addEventListener('input', function(){ debounce(load); });
+statusF.addEventListener('change', load); sortS.addEventListener('change', load);
+document.getElementById('exportBtn').addEventListener('click', function(){ window.open(ADMIN.API + '/enquiries/export', '_blank'); });
+load();
+</script>
+<script src="../assets/js/theme.js" defer></script>
+</body></html>

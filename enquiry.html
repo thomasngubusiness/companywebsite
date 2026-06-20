@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Request a Security Consultation — [Company] Security</title>
+<meta name="description" content="Tell us about your security requirements and our consultants will get in touch within one business day.">
+<meta name="theme-color" content="#06070C">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Request a Security Consultation — [Company] Security">
+<meta property="og:description" content="Tell us about your security requirements and our consultants will get in touch within one business day.">
+<meta property="og:site_name" content="[Company] Security">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap">
+<link rel="stylesheet" href="assets/css/style.css">
+<link rel="stylesheet" href="assets/css/components.css">
+<link rel="stylesheet" href="assets/css/animations.css">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%230A84FF' d='M12 2l8 3v6c0 5-3.4 8.5-8 11-4.6-2.5-8-6-8-11V5z'/%3E%3C/svg%3E">
+<script>(function(){try{var o=sessionStorage.getItem("theme-override");var h=new Date().getHours();document.documentElement.setAttribute("data-theme",o||((h>=7&&h<19)?"light":"dark"));}catch(e){document.documentElement.setAttribute("data-theme","dark");}})();</script>
+</head>
+<body class="page-fade">
+<a class="skip-link" href="#main">Skip to content</a>
+<div class="bg-orbs" aria-hidden="true"><span></span><span></span><span></span></div>
+<div class="bg-grid" aria-hidden="true"></div>
+
+<header class="nav" id="nav">
+  <div class="nav-inner">
+    <a class="brand" href="index.html" aria-label="[Company] Security home">
+      <span class="mark" aria-hidden="true">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M9 12l2 2 4-4"/></svg>
+      </span>
+      <span>[Company]<small>Security</small></span>
+    </a>
+    <nav aria-label="Primary">
+      <ul class="nav-links" id="navLinks">
+        <li><a href="index.html">Home</a></li>
+        <li><a href="services.html">Services</a></li>
+        <li><a href="about.html">About</a></li>
+        <li><a href="careers.html">Careers</a></li>
+        <li><a href="partners.html">Partners</a></li>
+        <li><a href="contact.html">Contact</a></li>
+      </ul>
+    </nav>
+    <div class="nav-actions">
+      <a class="btn btn-primary btn-cta" href="enquiry.html">Request Consultation</a>
+      <button class="nav-toggle" id="navToggle" aria-label="Toggle menu" aria-expanded="false"><span></span><span></span><span></span></button>
+    </div>
+  </div>
+</header>
+<main id="main">
+<section class="page-hero"><div class="container">
+  <div class="eyebrow" style="justify-content:center">Enquiry</div>
+  <h1 data-reveal>Request a <span class="gradient-text">Security Consultation</span></h1>
+  <p class="lede" data-reveal data-delay="1">Tell us about your security requirements and our consultants will get in touch.</p>
+  <div class="hero-badges" data-reveal data-delay="2"><span class="chip"><span class="dot"></span> Response within 1 business day</span><span class="chip">NDA on request</span><span class="chip">No obligation</span></div>
+</div></section>
+
+<section style="padding-top:14px"><div class="container" style="max-width:920px">
+  <form class="glass" style="padding:clamp(24px,4vw,40px)" data-ajax action="/api/enquiries" novalidate>
+    <input type="text" name="website" tabindex="-1" autocomplete="off" style="display:none" aria-hidden="true">
+    <h3 style="margin-bottom:6px">Project details</h3>
+    <p class="form-note" style="margin-bottom:20px">Fields marked <span class="req" style="color:var(--red)">*</span> are required.</p>
+    <div class="form-grid">
+      <div class="field"><label>Full Name <span class="req">*</span></label><input name="full_name" required data-min="2" placeholder="Your name"><span class="err"></span></div>
+      <div class="field"><label>Company Name <span class="req">*</span></label><input name="company_name" required placeholder="Company"><span class="err"></span></div>
+      <div class="field"><label>Business Email <span class="req">*</span></label><input type="email" name="email" required placeholder="you@company.com"><span class="err"></span></div>
+      <div class="field"><label>Phone Number <span class="req">*</span></label><input type="tel" name="phone" required placeholder="+60 12-345 6789"><span class="err"></span></div>
+      <div class="field"><label>Country <span class="req">*</span></label><input name="country" required placeholder="Country"><span class="err"></span></div>
+      <div class="field"><label>Industry <span class="req">*</span></label><select name="industry" required><option value="">Select…</option><option>Financial Services</option><option>Healthcare</option><option>Government</option><option>Technology</option><option>Manufacturing</option><option>E-Commerce</option><option>Education</option><option>Other</option></select><span class="err"></span></div>
+      <div class="field"><label>Service Required <span class="req">*</span></label><select name="service" required><option value="">Select a service…</option><option>Vulnerability Assessment &amp; Penetration Testing</option><option>Source Code Review</option><option>Cloud Security Assessment</option><option>Server Configuration Review</option><option>Compliance Assessment</option><option>Security Consulting</option><option>Other</option></select><span class="err"></span></div>
+      <div class="field"><label>Preferred Contact Method <span class="req">*</span></label><select name="contact_method" required><option value="">Select…</option><option>Email</option><option>Phone</option><option>Video Call</option></select><span class="err"></span></div>
+      <div class="field"><label>Preferred Meeting Date</label><input type="date" name="meeting_date"><span class="err"></span></div>
+      <div class="field col-2"><label>Project Description <span class="req">*</span></label><textarea name="project_description" required data-min="10" placeholder="Describe your environment, scope and goals…"></textarea><span class="err"></span></div>
+      <div class="field col-2"><label>File Attachment</label><input type="file" name="attachment" accept=".pdf,.doc,.docx,.xls,.xlsx,.png,.jpg"><span class="err"></span><span class="form-note">Optional — scope docs, network diagrams, etc. Max 10&nbsp;MB.</span></div>
+    </div>
+    <div class="form-status" role="status" aria-live="polite"></div>
+    <div style="display:flex;gap:14px;align-items:center;flex-wrap:wrap;margin-top:20px">
+      <button class="btn btn-primary btn-lg" type="submit">Submit Request</button>
+      <span class="form-note">By submitting you agree to our <a href="privacy-policy.html">Privacy Policy</a>.</span>
+    </div>
+  </form>
+</div></section>
+</main>
+
+<a class="btn btn-primary float-cta" href="enquiry.html" aria-label="Request a consultation">
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+  <span class="lbl">Request Consultation</span>
+</a>
+
+<footer class="site-footer">
+  <div class="container">
+    <div class="footer-grid">
+      <div class="footer-col">
+        <a class="brand" href="index.html" style="margin-bottom:14px">
+          <span class="mark" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M9 12l2 2 4-4"/></svg></span>
+          <span>[Company]<small>Security</small></span>
+        </a>
+        <p style="max-width:34ch;color:var(--ink-3);font-size:.92rem">Offensive security testing and cloud security expertise for enterprises that can't afford to be wrong.</p>
+        <div class="chip" style="margin-top:8px"><span class="dot"></span> Rapid, senior-led engagements</div>
+      </div>
+      <div class="footer-col">
+        <h4>Services</h4>
+        <a href="services.html#vapt">Penetration Testing</a>
+        <a href="services.html#code">Source Code Review</a>
+        <a href="services.html#cloud">Cloud Security</a>
+        <a href="services.html#server">Server Hardening</a>
+      </div>
+      <div class="footer-col">
+        <h4>Company</h4>
+        <a href="about.html">About Us</a>
+        <a href="careers.html">Careers</a>
+        <a href="partners.html">Partners</a>
+        <a href="contact.html">Contact</a>
+        <a href="enquiry.html">Request Consultation</a>
+      </div>
+      <div class="footer-col">
+        <h4>Legal</h4>
+        <a href="privacy-policy.html">Privacy Policy</a>
+        <a href="terms-of-service.html">Terms of Service</a>
+        <a href="mailto:hello@example.com">hello@example.com</a>
+        <a href="tel:+60312345678">+60 3-1234 5678</a>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>© <span data-year>2026</span> [Company] Security. All rights reserved.</span>
+      <span>Crafted with a Liquid Glass design system.</span>
+    </div>
+  </div>
+</footer>
+
+<script src="assets/js/theme.js" defer></script>
+<script src="assets/js/main.js" defer></script>
+<script src="assets/js/animations.js" defer></script>
+<script src="assets/js/forms.js" defer></script>
+</body>
+</html>

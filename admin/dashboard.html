@@ -1,0 +1,58 @@
+<!DOCTYPE html><html lang="en"><head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dashboard — [Company] Security Admin</title><meta name="robots" content="noindex">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap">
+<link rel="stylesheet" href="../assets/css/style.css"><link rel="stylesheet" href="../assets/css/components.css"><link rel="stylesheet" href="assets/admin.css">
+<script>(function(){try{var o=sessionStorage.getItem("theme-override");var h=new Date().getHours();document.documentElement.setAttribute("data-theme",o||((h>=7&&h<19)?"light":"dark"));}catch(e){document.documentElement.setAttribute("data-theme","dark");}})();</script>
+</head><body>
+<div class="bg-orbs" aria-hidden="true"><span></span><span></span><span></span></div>
+<div class="admin-shell">
+  <aside class="admin-side">
+    <a class="brand" href="dashboard.html"><span class="mark"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></span><span>[Company]<small>Admin</small></span></a>
+    <nav class="admin-nav">
+      <a href="dashboard.html" class="active">📊 Dashboard</a>
+      <a href="enquiries.html">📨 Enquiries</a>
+      <a href="../index.html">🌐 View Site</a>
+      <a href="#" id="logoutBtn">⎋ Sign Out</a>
+    </nav>
+  </aside>
+  <main class="admin-main">
+    <div class="admin-top"><div><h1 style="font-size:1.6rem;margin:0">Dashboard</h1><p style="color:var(--ink-3);margin:0" id="welcome">Overview of enquiries</p></div><a class="btn btn-glass" href="enquiries.html">Manage enquiries →</a></div>
+    <div class="kpi-grid" id="kpis">
+      <div class="kpi glass"><div class="num" id="k-total">—</div><div class="lbl">Total Enquiries</div></div>
+      <div class="kpi glass"><div class="num" id="k-new">—</div><div class="lbl">New Enquiries</div></div>
+      <div class="kpi glass"><div class="num" id="k-prog">—</div><div class="lbl">In Progress</div></div>
+      <div class="kpi glass"><div class="num" id="k-conv">—</div><div class="lbl">Conversion Rate</div></div>
+    </div>
+    <div class="grid g-2" style="gap:16px">
+      <div class="glass" style="padding:24px"><h3 style="margin-bottom:14px">Pipeline by status</h3><div id="statusBars"></div></div>
+      <div class="glass" style="padding:24px"><h3 style="margin-bottom:14px">Top services requested</h3><div id="serviceBars"></div></div>
+    </div>
+  </main>
+</div>
+<script src="assets/admin.js"></script>
+<script>
+ADMIN.guard().then(function (a) { if (a) document.getElementById('welcome').textContent = 'Signed in as ' + a.email; });
+document.getElementById('logoutBtn').addEventListener('click', function (e){ e.preventDefault(); ADMIN.logout(); });
+function bar(label, val, max, color) {
+  var pct = max ? Math.round(val / max * 100) : 0;
+  return '<div style="margin-bottom:12px"><div style="display:flex;justify-content:space-between;font-size:.85rem;margin-bottom:5px"><span>'+label+'</span><strong>'+val+'</strong></div>'+
+    '<div style="height:9px;border-radius:6px;background:var(--glass-3);overflow:hidden"><div style="height:100%;width:'+pct+'%;background:'+color+'"></div></div></div>';
+}
+ADMIN.req('/stats').then(function (r) {
+  if (!r.ok) return; var s = r.body;
+  document.getElementById('k-total').textContent = s.total;
+  document.getElementById('k-new').textContent = s.new;
+  document.getElementById('k-prog').textContent = s.byStatus['In Progress'] || 0;
+  document.getElementById('k-conv').textContent = s.conversion + '%';
+  var order = ['New','Contacted','In Progress','Proposal Sent','Closed'];
+  var colors = ['#0A84FF','#32ADE6','#FF9F0A','#BF5AF2','#30D158'];
+  var max = Math.max.apply(null, order.map(function(k){return s.byStatus[k]||0;}).concat([1]));
+  document.getElementById('statusBars').innerHTML = order.map(function(k,i){return bar(k, s.byStatus[k]||0, max, colors[i]);}).join('');
+  var svc = (s.byService||[]).filter(function(x){return x.service;}).slice(0,6);
+  var smax = Math.max.apply(null, svc.map(function(x){return x.n;}).concat([1]));
+  document.getElementById('serviceBars').innerHTML = svc.length ? svc.map(function(x){return bar(x.service, x.n, smax, '#5E5CE6');}).join('') : '<p style="color:var(--ink-4)">No data yet.</p>';
+});
+</script>
+<script src="../assets/js/theme.js" defer></script>
+</body></html>

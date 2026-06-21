@@ -1,7 +1,7 @@
 {
   "name": "company-security-backend",
   "version": "1.0.0",
-  "description": "[Company] Security — enquiry API, admin auth, email notifications",
+  "description": "[Company] Security \u2014 enquiry API, admin auth, email notifications",
   "main": "server.js",
   "type": "commonjs",
   "scripts": {
@@ -22,5 +22,7 @@
     "nodemailer": "^6.9.14",
     "dotenv": "^16.4.5"
   },
-  "engines": { "node": ">=18" }
+  "engines": {
+    "node": "20.x"
+  }
 }

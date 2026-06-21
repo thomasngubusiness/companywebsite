@@ -38,6 +38,7 @@ app.use(logger);
 // ── API ──
 app.use('/api', require('./routes/enquiries'));
 app.use('/api/admin', require('./routes/admin'));
+app.get('/api/content', require('./controllers/contentController').getAll);
 app.get('/api/health', (_req, res) => res.json({ success: true, status: 'ok', time: new Date().toISOString() }));
 
 // ── Serve the static website + admin (single-deployment convenience) ──

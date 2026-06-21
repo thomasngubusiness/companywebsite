@@ -3,6 +3,7 @@ const router = require('express').Router();
 const rateLimit = require('express-rate-limit');
 const auth = require('../controllers/authController');
 const c = require('../controllers/enquiryController');
+const content = require('../controllers/contentController');
 const { requireAuth } = require('../middleware/auth');
 const { verifyToken, issueToken } = require('../middleware/csrf');
 
@@ -20,4 +21,5 @@ router.get('/enquiries/export', requireAuth, c.exportCsv);
 router.get('/stats', requireAuth, c.stats);
 router.patch('/enquiries/:id/status', requireAuth, verifyToken, c.updateStatus);
 router.delete('/enquiries/:id', requireAuth, verifyToken, c.remove);
+router.put('/content/:key', requireAuth, verifyToken, content.update);
 module.exports = router;

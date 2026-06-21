@@ -6,7 +6,7 @@
 .admin-side .brand{margin-bottom:26px}
 .admin-nav a{display:flex;align-items:center;gap:10px;padding:11px 13px;border-radius:12px;color:var(--ink-2);font-weight:500;font-size:.92rem;margin-bottom:4px}
 .admin-nav a.active,.admin-nav a:hover{background:var(--glass-2);color:#fff}
-.admin-main{padding:clamp(20px,3vw,38px)}
+.admin-main{padding:clamp(20px,3vw,38px);min-width:0;overflow-x:hidden}
 .admin-top{display:flex;justify-content:space-between;align-items:center;gap:14px;margin-bottom:26px;flex-wrap:wrap}
 .kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:24px}
 @media(max-width:900px){.kpi-grid{grid-template-columns:repeat(2,1fr)}}
@@ -16,7 +16,7 @@
 .kpi .lbl{color:var(--ink-3);font-size:.85rem;margin-top:4px}
 .toolbar{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px;align-items:center}
 .toolbar input,.toolbar select{padding:10px 13px;border-radius:10px;background:var(--glass-3);border:1px solid var(--glass-stroke);color:#fff;font-family:inherit;font-size:.9rem}
-.table-wrap{overflow:auto;border-radius:var(--r16)}
+.table-wrap{overflow-x:auto;overflow-y:visible;border-radius:var(--r16);-webkit-overflow-scrolling:touch}
 table.data{width:100%;border-collapse:collapse;font-size:.88rem;min-width:760px}
 table.data th,table.data td{text-align:left;padding:12px 14px;border-bottom:1px solid var(--hairline)}
 table.data th{color:var(--ink-4);font-size:.74rem;text-transform:uppercase;letter-spacing:.08em;position:sticky;top:0;background:rgba(10,12,20,.9)}

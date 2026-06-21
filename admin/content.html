@@ -1,0 +1,147 @@
+<!DOCTYPE html><html lang="en"><head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Content — [Company] Security Admin</title><meta name="robots" content="noindex">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap">
+<link rel="stylesheet" href="../assets/css/style.css"><link rel="stylesheet" href="../assets/css/components.css"><link rel="stylesheet" href="assets/admin.css">
+<script>(function(){try{var o=sessionStorage.getItem("theme-override");var h=new Date().getHours();document.documentElement.setAttribute("data-theme",o||((h>=7&&h<19)?"light":"dark"));}catch(e){document.documentElement.setAttribute("data-theme","dark");}})();</script>
+<style>
+.cms-card{padding:24px;margin-bottom:22px}
+.cms-card .hd{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:14px;flex-wrap:wrap}
+.cms-row{border:1px solid var(--glass-stroke);border-radius:var(--r12);padding:14px;margin-bottom:12px;background:var(--glass-3);position:relative}
+.cms-row .grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+@media(max-width:680px){.cms-row .grid2{grid-template-columns:1fr}}
+.cms-row .rm{position:absolute;top:10px;right:10px}
+.cms-lbl{font-size:.72rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-4);margin:6px 0 3px}
+.cms-card input,.cms-card textarea{width:100%;font-family:inherit;font-size:.92rem;color:var(--ink);padding:9px 11px;border-radius:9px;background:var(--bg-2);border:1px solid var(--glass-stroke)}
+.cms-card textarea{min-height:60px;resize:vertical}
+.cms-card input:focus,.cms-card textarea:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 3px rgba(10,132,255,.18)}
+.save-note{font-size:.82rem;color:var(--ink-4)}
+</style>
+</head><body>
+<div class="bg-orbs" aria-hidden="true"><span></span><span></span><span></span></div>
+<div class="admin-shell">
+  <aside class="admin-side">
+    <a class="brand" href="dashboard.html"><span class="mark"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></span><span>[Company]<small>Admin</small></span></a>
+    <nav class="admin-nav">
+      <a href="dashboard.html">📊 Dashboard</a>
+      <a href="enquiries.html">📨 Enquiries</a>
+      <a href="content.html" class="active">📝 Content</a>
+      <a href="../index.html">🌐 View Site</a>
+      <a href="#" id="logoutBtn">⎋ Sign Out</a>
+    </nav>
+  </aside>
+  <main class="admin-main">
+    <div class="admin-top"><div><h1 style="font-size:1.6rem;margin:0">Site Content</h1><p style="color:var(--ink-3);margin:0">Edit what appears on the public website. Changes go live on save.</p></div></div>
+    <div id="editors"></div>
+  </main>
+</div>
+<script src="assets/admin.js"></script>
+<script>
+ADMIN.guard();
+document.getElementById('logoutBtn').addEventListener('click', function(e){e.preventDefault();ADMIN.logout();});
+var CSRF=null, CONTENT={};
+function g(id){return document.getElementById(id);}
+function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
+function el(html){var d=document.createElement('div');d.innerHTML=html.trim();return d.firstChild;}
+
+// ---- generic list-section editor ----
+function listEditor(opts){
+  // opts: {key, title, wrap, fields:[{k,label,ta}], items:[]}
+  var card=el('<section class="glass cms-card"></section>');
+  card.appendChild(el('<div class="hd"><h3 style="margin:0">'+esc(opts.title)+'</h3><div><button class="btn btn-glass" data-add>+ Add</button> <button class="btn btn-primary" data-save>Save</button></div></div>'));
+  var rows=el('<div></div>'); card.appendChild(rows);
+  var note=el('<div class="save-note"></div>'); card.appendChild(note);
+
+  function addRow(values){
+    values=values||{};
+    var inner=opts.fields.map(function(f){
+      var v=esc(values[f.k]||'');
+      var input=f.ta?('<textarea data-f="'+f.k+'">'+v+'</textarea>')
+                     :('<input data-f="'+f.k+'" value="'+v+'">');
+      return '<div><div class="cms-lbl">'+esc(f.label)+'</div>'+input+'</div>';
+    }).join('');
+    var row=el('<div class="cms-row"><button class="btn btn-ghost rm" data-rm>✕</button><div class="grid2">'+inner+'</div></div>');
+    row.querySelector('[data-rm]').addEventListener('click',function(){row.remove();});
+    rows.appendChild(row);
+  }
+  (opts.items||[]).forEach(addRow);
+  card.querySelector('[data-add]').addEventListener('click',function(){addRow({});});
+  card.querySelector('[data-save]').addEventListener('click',function(){
+    var arr=[];
+    rows.querySelectorAll('.cms-row').forEach(function(r){
+      var o={}; r.querySelectorAll('[data-f]').forEach(function(i){o[i.getAttribute('data-f')]=i.value;});
+      if(Object.keys(o).some(function(k){return (o[k]||'').trim();})) arr.push(o);
+    });
+    var payload=opts.wrap?({}):arr;
+    if(opts.wrap){payload[opts.wrap]=arr;}
+    save(opts.key,payload,note);
+  });
+  return card;
+}
+
+// ---- partners (two name lists) ----
+function partnersEditor(p){
+  p=p||{};
+  var card=el('<section class="glass cms-card"></section>');
+  card.appendChild(el('<div class="hd"><h3 style="margin:0">Partners</h3><button class="btn btn-primary" data-save>Save</button></div>'));
+  card.appendChild(el('<div class="cms-lbl">Strategic partners (one name per line)</div>'));
+  var ta1=el('<textarea rows="5">'+esc((p.strategic||[]).join('\n'))+'</textarea>'); card.appendChild(ta1);
+  card.appendChild(el('<div class="cms-lbl" style="margin-top:12px">Technology partners (one name per line)</div>'));
+  var ta2=el('<textarea rows="5">'+esc((p.technology||[]).join('\n'))+'</textarea>'); card.appendChild(ta2);
+  var note=el('<div class="save-note"></div>'); card.appendChild(note);
+  function lines(t){return t.value.split('\n').map(function(x){return x.trim();}).filter(Boolean);}
+  card.querySelector('[data-save]').addEventListener('click',function(){
+    save('partners',{strategic:lines(ta1),technology:lines(ta2)},note);
+  });
+  return card;
+}
+
+// ---- contact ----
+function contactEditor(c){
+  c=c||{};
+  var f=[['address','Office Address (use new lines)',1],['email1','Primary Email',0],['email2','Secondary Email',0],['phone','Phone',0],['phone_note','Phone note',0],['hours','Business Hours (use new lines)',1]];
+  var card=el('<section class="glass cms-card"></section>');
+  card.appendChild(el('<div class="hd"><h3 style="margin:0">Contact</h3><button class="btn btn-primary" data-save>Save</button></div>'));
+  var wrap=el('<div></div>');
+  f.forEach(function(x){
+    wrap.appendChild(el('<div class="cms-lbl">'+esc(x[1])+'</div>'));
+    wrap.appendChild(el(x[2]?('<textarea data-f="'+x[0]+'" rows="3">'+esc(c[x[0]]||'')+'</textarea>'):('<input data-f="'+x[0]+'" value="'+esc(c[x[0]]||'')+'">')));
+  });
+  card.appendChild(wrap);
+  var note=el('<div class="save-note"></div>'); card.appendChild(note);
+  card.querySelector('[data-save]').addEventListener('click',function(){
+    var o={}; wrap.querySelectorAll('[data-f]').forEach(function(i){o[i.getAttribute('data-f')]=i.value;});
+    save('contact',o,note);
+  });
+  return card;
+}
+
+function save(key,data,note){
+  note.textContent='Saving…';
+  ADMIN.req('/content/'+key,{method:'PUT',headers:{'X-CSRF-Token':CSRF},body:JSON.stringify({data:data})})
+   .then(function(r){ if(r.ok&&r.body.success){note.textContent='Saved ✓ — live on the site now.';} else {note.textContent='Save failed: '+((r.body&&r.body.message)||'error');} })
+   .catch(function(){note.textContent='Save failed (network).';});
+}
+
+function build(){
+  var box=g('editors'); box.innerHTML='';
+  box.appendChild(listEditor({key:'about_team',title:'About — Leadership Team',
+    fields:[{k:'name',label:'Name'},{k:'role',label:'Role'},{k:'bio',label:'Short bio',ta:true}],
+    items:CONTENT.about_team||[]}));
+  box.appendChild(listEditor({key:'insights',title:'Latest Insights (blog/news cards)',
+    fields:[{k:'tag',label:'Tag'},{k:'title',label:'Title'},{k:'summary',label:'Summary',ta:true},{k:'url',label:'Link URL'}],
+    items:CONTENT.insights||[]}));
+  box.appendChild(listEditor({key:'careers',title:'Careers — Open Positions',wrap:'positions',
+    fields:[{k:'title',label:'Position'},{k:'type',label:'Type (Remote / Hybrid / Shift)'},{k:'desc',label:'Description',ta:true}],
+    items:(CONTENT.careers&&CONTENT.careers.positions)||[]}));
+  box.appendChild(partnersEditor(CONTENT.partners));
+  box.appendChild(contactEditor(CONTENT.contact));
+}
+
+ADMIN.csrf().then(function(t){CSRF=t;});
+fetch(ADMIN.API.replace('/admin','')+'/content').then(function(r){return r.json();})
+ .then(function(d){CONTENT=(d&&d.content)||{};build();})
+ .catch(function(){CONTENT={};build();});
+</script>
+<script src="../assets/js/theme.js" defer></script>
+</body></html>

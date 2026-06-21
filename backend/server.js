@@ -5,10 +5,10 @@ const cors = require('cors');
 const cookieParser = require('cookie-parser');
 const path = require('path');
 const config = require('./config');
-const { init } = require('./database/db');
+const { init, ensureAdmin } = require('./database/db');
 const logger = require('./middleware/logger');
 
-init(); // ensure tables exist
+// schema is initialised before the server starts listening (see bottom)
 
 const app = express();
 app.set('trust proxy', 1);
@@ -47,6 +47,14 @@ app.use(express.static(ROOT, { extensions: ['html'] }));
 // 404 for unknown API routes (never serve the SPA shell for /api/*)
 app.use('/api', (_req, res) => res.status(404).json({ success: false, message: 'Not found.' }));
 
-app.listen(config.port, () => {
-  console.log(`[Company] Security API + site running on http://localhost:${config.port} (${config.env})`);
-});
+init()
+  .then(() => ensureAdmin())
+  .then(() => {
+    app.listen(config.port, () => {
+      console.log(`[Company] Security API + site running on http://localhost:${config.port} (${config.env})`);
+    });
+  })
+  .catch((err) => {
+    console.error('Startup failed — could not initialise the database:', err.message);
+    process.exit(1);
+  });

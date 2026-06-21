@@ -1,4 +1,5 @@
 'use strict';
-const { init } = require('./db');
-init();
-console.log('Database initialized at', require('../config').dbPath);
+const { init, pool } = require('./db');
+init()
+  .then(() => { console.log('PostgreSQL schema ready.'); return pool.end(); })
+  .catch((e) => { console.error('DB init failed:', e.message); process.exit(1); });

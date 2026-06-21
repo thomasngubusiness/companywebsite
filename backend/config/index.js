@@ -10,6 +10,7 @@ module.exports = {
   jwtSecret: process.env.JWT_SECRET || 'dev_insecure_secret_change_me',
   jwtExpires: process.env.JWT_EXPIRES || '8h',
   admin: { email: process.env.ADMIN_EMAIL, password: process.env.ADMIN_PASSWORD },
+  databaseUrl: process.env.DATABASE_URL || '',
   dbPath: process.env.DB_PATH || path.join(__dirname, '..', 'database', 'enquiries.db'),
   mail: {
     host: process.env.SMTP_HOST, port: parseInt(process.env.SMTP_PORT || '587', 10),

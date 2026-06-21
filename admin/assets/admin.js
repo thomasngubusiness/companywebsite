@@ -8,7 +8,12 @@ window.ADMIN = (function () {
     opts.credentials = 'include';
     return fetch(API + path, opts).then(function (r) {
       return r.json().catch(function () { return {}; }).then(function (j) {
-        if (r.status === 401) { location.href = 'login.html'; throw new Error('unauth'); }
+        // Only bounce to the login page when a PROTECTED call is unauthorized.
+        // A failed /login must NOT redirect — the page needs to show the error.
+        if (r.status === 401 && path.indexOf('/login') !== 0) {
+          location.href = 'login.html';
+          throw new Error('unauth');
+        }
         return { ok: r.ok, body: j };
       });
     });

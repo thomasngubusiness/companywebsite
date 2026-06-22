@@ -8,10 +8,12 @@
   function esc(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
   function nl2br(s) { return esc(s).replace(/\n/g, '<br>'); }
   function normUrl(u) {
-    u = String(u == null ? '' : u).trim();
+    u = String(u == null ? '' : u).trim().replace(/^#+/, ''); // strip stray leading '#'
     if (!u) return '';
-    if (/^(https?:\/\/|mailto:|tel:|\/|#)/i.test(u)) return u; // already absolute / relative / anchor
-    return 'https://' + u; // bare domain like example.com/article
+    if (/^(https?:\/\/|mailto:|tel:)/i.test(u)) return u;     // already absolute
+    if (/^\//.test(u)) return u;                              // site-relative path
+    if (/^[\w.-]+\.[a-z]{2,}(\/|$|\?)/i.test(u)) return 'https://' + u; // bare domain
+    return u;
   }
   function nonEmpty(v) { return Array.isArray(v) ? v.length : (v && Object.keys(v).length); }
 

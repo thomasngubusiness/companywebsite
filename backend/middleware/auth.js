@@ -15,20 +15,31 @@ function _cookie(res, token) {
   });
 }
 
-function requireAuth(req, res, next) {
+async function requireAuth(req, res, next) {
   const token = (req.cookies && req.cookies.token) ||
     (req.headers.authorization || '').replace(/^Bearer\s+/i, '');
   if (!token) return res.status(401).json({ success: false, message: 'Authentication required.' });
+  let decoded;
   try {
-    const decoded = jwt.verify(token, config.jwtSecret);
-    req.admin = decoded;
-    // Sliding session: refresh the cookie on every authenticated request so an
-    // ACTIVE admin stays logged in, but 15 minutes of inactivity logs them out.
-    _cookie(res, sign({ id: decoded.id, email: decoded.email, role: decoded.role || 'admin' }));
-    next();
+    decoded = jwt.verify(token, config.jwtSecret);
   } catch (e) {
     return res.status(401).json({ success: false, message: 'Session expired. Please sign in again.' });
   }
+  // Authorize against the LIVE role/email in the database, not the token, so
+  // role changes (and account deletion) take effect immediately for everyone.
+  let id = decoded.id, email = decoded.email, role = decoded.role || 'admin';
+  try {
+    const { query } = require('../database/db');
+    const { rows } = await query('SELECT email, role FROM admins WHERE id = $1', [id]);
+    if (!rows[0]) return res.status(401).json({ success: false, message: 'Account no longer exists.' });
+    email = rows[0].email; role = rows[0].role || 'admin';
+  } catch (e) {
+    console.error('[auth.requireAuth] role lookup failed:', e.message); // fall back to token claims
+  }
+  req.admin = { id: id, email: email, role: role };
+  // Sliding session: refresh the cookie (15m) on every authenticated request.
+  _cookie(res, sign({ id: id, email: email, role: role }));
+  next();
 }
 
 function requireRole(roles) {

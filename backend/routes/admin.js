@@ -6,7 +6,7 @@ const c = require('../controllers/enquiryController');
 const content = require('../controllers/contentController');
 const admins = require('../controllers/adminUsersController');
 const captcha = require('../controllers/captchaController');
-const { requireAuth, requireSuper } = require('../middleware/auth');
+const { requireAuth, requireRole, requireSuper } = require('../middleware/auth');
 const { verifyToken, issueToken } = require('../middleware/csrf');
 
 const loginLimiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 10, standardHeaders: true, legacyHeaders: false,
@@ -30,13 +30,14 @@ router.patch('/me', requireAuth, verifyToken, auth.updateProfile);
 router.get('/enquiries', requireAuth, c.list);
 router.get('/enquiries/export', requireAuth, c.exportCsv);
 router.get('/stats', requireAuth, c.stats);
-router.patch('/enquiries/:id/status', requireAuth, verifyToken, c.updateStatus);
-router.delete('/enquiries/:id', requireAuth, verifyToken, c.remove);
-router.put('/content/:key', requireAuth, verifyToken, content.update);
+router.patch('/enquiries/:id/status', requireAuth, requireRole(['admin','super']), verifyToken, c.updateStatus);
+router.delete('/enquiries/:id', requireAuth, requireRole(['admin','super']), verifyToken, c.remove);
+router.put('/content/:key', requireAuth, requireRole(['admin','super']), verifyToken, content.update);
 
 // ── Admin user management (super only for changes) ──
-router.get('/admins', requireAuth, admins.list);
+router.get('/admins', requireAuth, requireSuper, admins.list);
 router.post('/admins', requireAuth, requireSuper, verifyToken, admins.create);
+router.patch('/admins/:id/role', requireAuth, requireSuper, verifyToken, admins.setRole);
 router.patch('/admins/:id/password', requireAuth, requireSuper, verifyToken, admins.resetPassword);
 router.delete('/admins/:id', requireAuth, requireSuper, verifyToken, admins.remove);
 

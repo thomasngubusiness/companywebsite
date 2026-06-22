@@ -31,11 +31,14 @@ function requireAuth(req, res, next) {
   }
 }
 
-function requireSuper(req, res, next) {
-  if (!req.admin || req.admin.role !== 'super') {
-    return res.status(403).json({ success: false, message: 'Super-admin privilege required.' });
-  }
-  next();
+function requireRole(roles) {
+  return function (req, res, next) {
+    if (!req.admin || roles.indexOf(req.admin.role) === -1) {
+      return res.status(403).json({ success: false, message: 'You do not have permission to do that.' });
+    }
+    next();
+  };
 }
+const requireSuper = requireRole(['super']);
 
-module.exports = { sign, requireAuth, requireSuper, setAuthCookie: _cookie };
+module.exports = { sign, requireAuth, requireRole, requireSuper, setAuthCookie: _cookie };

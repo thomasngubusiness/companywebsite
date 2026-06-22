@@ -38,13 +38,15 @@
 </div>
 <script src="assets/admin.js"></script>
 <script>
-ADMIN.guard();
+var ROLE='sales';
+ADMIN.guard().then(function(a){ if(a){ ROLE=a.role||'sales'; } load(); });
 document.getElementById('logoutBtn').addEventListener('click', function(e){e.preventDefault();ADMIN.logout();});
 var CSRF = null; ADMIN.csrf().then(function(t){ CSRF = t; });
 var search = document.getElementById('search'), statusF = document.getElementById('statusFilter'), sortS = document.getElementById('sortSel');
 var STAT = ['New','Contacted','In Progress','Proposal Sent','Closed'];
 function esc(s){ return String(s==null?'':s).replace(/[<>&"]/g,function(c){return {'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;'}[c];}); }
 function cls(s){ return 's-' + String(s).replace(/ /g,''); }
+function canEdit(){ return ROLE==='admin'||ROLE==='super'; }
 var timer;
 function debounce(fn){ clearTimeout(timer); timer = setTimeout(fn, 250); }
 function load() {
@@ -63,8 +65,8 @@ function load() {
         '<td>'+esc(e.company_name)+'</td>'+
         '<td>'+esc(e.service)+'</td>'+
         '<td><a href="mailto:'+esc(e.email)+'">'+esc(e.email)+'</a></td>'+
-        '<td><select class="status-pill '+cls(e.status)+'" data-status>'+opts+'</select></td>'+
-        '<td class="row-actions"><button class="icon-btn" data-del title="Delete">🗑</button></td></tr>';
+        (canEdit() ? ('<td><select class="status-pill '+cls(e.status)+'" data-status>'+opts+'</select></td>') : ('<td><span class="status-pill '+cls(e.status)+'" style="padding:4px 10px;display:inline-block">'+esc(e.status)+'</span></td>'))+
+        (canEdit() ? '<td class="row-actions"><button class="icon-btn" data-del title="Delete">🗑</button></td>' : '<td></td>')+'</tr>';
     }).join('');
     tb.querySelectorAll('[data-status]').forEach(function (sel) {
       sel.addEventListener('change', function () {
@@ -85,7 +87,6 @@ function load() {
 search.addEventListener('input', function(){ debounce(load); });
 statusF.addEventListener('change', load); sortS.addEventListener('change', load);
 document.getElementById('exportBtn').addEventListener('click', function(){ window.open(ADMIN.API + '/enquiries/export', '_blank'); });
-load();
 </script>
 <script src="../assets/js/theme.js" defer></script>
 </body></html>

@@ -19,7 +19,24 @@ window.ADMIN = (function () {
     });
   }
   function csrf() { return req('/csrf').then(function (r) { return r.body.csrf; }); }
-  function guard() { return req('/me').then(function (r) { if (!r.ok) location.href = 'login.html'; return r.body.admin; }); }
+  function applyRoleUI(a) {
+    var role = (a && a.role) || 'sales';
+    document.body.setAttribute('data-role', role);
+    function hide(href){ document.querySelectorAll('.admin-nav a[href="'+href+'"]').forEach(function(el){ el.style.display='none'; }); }
+    if (role === 'sales') { hide('content.html'); hide('admins.html'); }
+    else if (role === 'admin') { hide('admins.html'); }
+    // page-level access guard
+    var page = (location.pathname.split('/').pop() || '');
+    if (page === 'content.html' && !(role === 'admin' || role === 'super')) location.href = 'dashboard.html';
+    if (page === 'admins.html' && role !== 'super') location.href = 'dashboard.html';
+  }
+  function guard() {
+    return req('/me').then(function (r) {
+      if (!r.ok) { location.href = 'login.html'; return null; }
+      applyRoleUI(r.body.admin);
+      return r.body.admin;
+    });
+  }
   function logout() { req('/logout', { method: 'POST' }).finally(function () { location.href = 'login.html'; }); }
   return { req: req, csrf: csrf, guard: guard, logout: logout, API: API };
 })();

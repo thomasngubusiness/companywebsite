@@ -46,6 +46,7 @@
       <div class="form-grid">
         <div class="field"><div class="cms-lbl">Email</div><input id="newEmail" type="email" placeholder="person@email.com"></div>
         <div class="field"><div class="cms-lbl">Password (min 8 chars)</div><input id="newPass" type="text" placeholder="Set a strong password"></div>
+        <div class="field"><div class="cms-lbl">Role</div><select id="newRole" style="width:100%;font-family:inherit;font-size:.92rem;color:var(--ink);padding:10px 12px;border-radius:9px;background:var(--bg-2);border:1px solid var(--glass-stroke)"><option value="sales">Sales — view enquiries only</option><option value="admin">Admin — edit content &amp; enquiries</option><option value="super">Super — full control</option></select></div>
       </div>
       <div class="form-status" id="addStatus" role="status" aria-live="polite" style="margin-top:10px"></div>
       <button class="btn btn-primary" id="addBtn" style="margin-top:14px">+ Add admin</button>
@@ -77,12 +78,9 @@ function load(){
     if(!r.ok)return;
     var list=r.body.admins||[];
     g('list').innerHTML=list.map(function(a){
-      var role='<span class="role-pill '+(a.role==='super'?'role-super':'role-admin')+'">'+esc(a.role||'admin')+'</span>';
-      var actions='';
-      if(isSuper){
-        actions='<button class="x" data-pw>Reset password</button>'+
-                (a.id===(ME&&ME.id)?'':'<button class="x del" data-del>Delete</button>');
-      }
+      var roles=['sales','admin','super'];
+      var roleSel='<select class="x" data-role title="Change role">'+roles.map(function(rr){return '<option value="'+rr+'"'+((a.role||'sales')===rr?' selected':'')+'>'+rr+'</option>';}).join('')+'</select>';
+      var actions=roleSel+'<button class="x" data-pw>Reset password</button>'+(a.id===(ME&&ME.id)?'':'<button class="x del" data-del>Delete</button>');
       return '<div class="adm-row" data-id="'+a.id+'" data-email="'+esc(a.email)+'"><div><div class="em">'+esc(a.email)+role+'</div>'+
         '<div class="meta">Added '+esc((a.created_at||'').slice(0,10))+(a.id===(ME&&ME.id)?' · you':'')+'</div></div>'+
         '<div class="adm-actions">'+actions+'</div></div>';
@@ -95,6 +93,13 @@ function load(){
         ADMIN.req('/admins/'+id,{method:'DELETE',headers:{'X-CSRF-Token':CSRF}}).then(function(r){
           if(r.ok&&r.body.success){load();} else {alert((r.body&&r.body.message)||'Delete failed');}
         });
+      });
+    });
+    g('list').querySelectorAll('[data-role]').forEach(function(sel){
+      sel.addEventListener('change',function(){
+        var row=sel.closest('.adm-row'), id=row.getAttribute('data-id');
+        ADMIN.req('/admins/'+id+'/role',{method:'PATCH',headers:{'X-CSRF-Token':CSRF},body:JSON.stringify({role:sel.value})})
+         .then(function(r){ if(!(r.ok&&r.body.success)){ alert((r.body&&r.body.message)||'Failed'); load(); } });
       });
     });
     g('list').querySelectorAll('[data-pw]').forEach(function(b){
@@ -113,7 +118,7 @@ function load(){
 g('addBtn').addEventListener('click',function(){
   var st=g('addStatus'), email=g('newEmail').value.trim(), pass=g('newPass').value;
   st.className='form-status';
-  ADMIN.req('/admins',{method:'POST',headers:{'X-CSRF-Token':CSRF},body:JSON.stringify({email:email,password:pass})})
+  ADMIN.req('/admins',{method:'POST',headers:{'X-CSRF-Token':CSRF},body:JSON.stringify({email:email,password:pass,role:(g('newRole')?g('newRole').value:'sales')})})
    .then(function(r){
      if(r.ok&&r.body.success){st.className='form-status show ok';st.textContent='Admin added ✓';g('newEmail').value='';g('newPass').value='';load();}
      else{st.className='form-status show bad';st.textContent=(r.body&&r.body.message)||'Could not add admin.';}

@@ -47,6 +47,21 @@ async function ensureAdmin() {
     [email, hash]
   );
   console.log('[db] admin account ensured:', email);
+
+  // Optional: seed additional admins from ADMIN_USERS = "email:pass,email2:pass2"
+  const extra = process.env.ADMIN_USERS || '';
+  for (const pair of extra.split(/[,\n]/)) {
+    const ix = pair.indexOf(':');
+    if (ix < 1) continue;
+    const e = pair.slice(0, ix).toLowerCase().trim();
+    const p = pair.slice(ix + 1).trim();
+    if (!e || !p) continue;
+    const h = bcrypt.hashSync(p, 12);
+    await pool.query(
+      `INSERT INTO admins (email, password_hash) VALUES ($1, $2)
+       ON CONFLICT (email) DO UPDATE SET password_hash = EXCLUDED.password_hash`, [e, h]);
+    console.log('[db] extra admin ensured:', e);
+  }
 }
 
 module.exports = { pool, query, init, ensureAdmin };

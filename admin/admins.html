@@ -1,0 +1,95 @@
+<!DOCTYPE html><html lang="en"><head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admins — [Company] Security Admin</title><meta name="robots" content="noindex">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap">
+<link rel="stylesheet" href="../assets/css/style.css"><link rel="stylesheet" href="../assets/css/components.css"><link rel="stylesheet" href="assets/admin.css">
+<script>(function(){try{var o=sessionStorage.getItem("theme-override");var h=new Date().getHours();document.documentElement.setAttribute("data-theme",o||((h>=7&&h<19)?"light":"dark"));}catch(e){document.documentElement.setAttribute("data-theme","dark");}})();</script>
+<style>
+.cms-card{padding:24px;margin-bottom:22px}
+.cms-card input{width:100%;font-family:inherit;font-size:.92rem;color:var(--ink);padding:10px 12px;border-radius:9px;background:var(--bg-2);border:1px solid var(--glass-stroke)}
+.cms-card input:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 3px rgba(10,132,255,.18)}
+.cms-lbl{font-size:.72rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-4);margin:0 0 4px}
+.adm-row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 14px;border:1px solid var(--glass-stroke);border-radius:12px;margin-bottom:10px;background:var(--glass-3);flex-wrap:wrap}
+.adm-row .em{font-weight:600}
+.adm-row .meta{color:var(--ink-4);font-size:.82rem}
+.adm-actions{display:flex;gap:8px}
+.x{border:1px solid var(--glass-stroke);background:var(--glass-3);color:var(--ink-3);border-radius:8px;padding:5px 11px;font-size:.8rem;font-weight:600;cursor:pointer}
+.x:hover{color:#fff}
+.x.del:hover{border-color:rgba(255,69,58,.45);color:#ff5b50;background:rgba(255,69,58,.08)}
+.note{font-size:.82rem;color:var(--ink-4);margin-top:8px}
+</style>
+</head><body>
+<div class="bg-orbs" aria-hidden="true"><span></span><span></span><span></span></div>
+<div class="admin-shell">
+  <aside class="admin-side">
+    <a class="brand" href="dashboard.html"><span class="mark"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></span><span>[Company]<small>Admin</small></span></a>
+    <nav class="admin-nav">
+      <a href="dashboard.html">📊 Dashboard</a>
+      <a href="enquiries.html">📨 Enquiries</a>
+      <a href="content.html">📝 Content</a>
+      <a href="admins.html" class="active">👥 Admins</a>
+      <a href="../index.html">🌐 View Site</a>
+      <a href="#" id="logoutBtn">⎋ Sign Out</a>
+    </nav>
+  </aside>
+  <main class="admin-main">
+    <div class="admin-top"><div><h1 style="font-size:1.6rem;margin:0">Admin Users</h1><p style="color:var(--ink-3);margin:0">Add or remove people who can sign in to this dashboard.</p></div></div>
+
+    <section class="glass cms-card">
+      <h3 style="margin:0 0 14px">Add a new admin</h3>
+      <div class="form-grid">
+        <div class="field"><div class="cms-lbl">Email</div><input id="newEmail" type="email" placeholder="person@email.com"></div>
+        <div class="field"><div class="cms-lbl">Password (min 8 chars)</div><input id="newPass" type="text" placeholder="Set a strong password"></div>
+      </div>
+      <div class="form-status" id="addStatus" role="status" aria-live="polite" style="margin-top:10px"></div>
+      <button class="btn btn-primary" id="addBtn" style="margin-top:14px">+ Add admin</button>
+      <div class="note">Tip: share the password securely; the new admin can change it later by being re-added with a new password.</div>
+    </section>
+
+    <section class="glass cms-card">
+      <h3 style="margin:0 0 14px">Current admins</h3>
+      <div id="list"><p style="color:var(--ink-4)">Loading…</p></div>
+    </section>
+  </main>
+</div>
+<script src="assets/admin.js"></script>
+<script>
+ADMIN.guard();
+document.getElementById('logoutBtn').addEventListener('click',function(e){e.preventDefault();ADMIN.logout();});
+var CSRF=null; ADMIN.csrf().then(function(t){CSRF=t;});
+function g(id){return document.getElementById(id);}
+function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
+
+function load(){
+  ADMIN.req('/admins').then(function(r){
+    if(!r.ok)return;
+    var list=r.body.admins||[];
+    g('list').innerHTML=list.map(function(a){
+      return '<div class="adm-row" data-id="'+a.id+'"><div><div class="em">'+esc(a.email)+'</div>'+
+        '<div class="meta">Added '+esc((a.created_at||'').slice(0,10))+'</div></div>'+
+        '<div class="adm-actions"><button class="x del" data-del>Delete</button></div></div>';
+    }).join('')|| '<p style="color:var(--ink-4)">No admins.</p>';
+    g('list').querySelectorAll('[data-del]').forEach(function(b){
+      b.addEventListener('click',function(){
+        var row=b.closest('.adm-row'), id=row.getAttribute('data-id');
+        if(!confirm('Delete this admin? They will no longer be able to sign in.'))return;
+        ADMIN.req('/admins/'+id,{method:'DELETE',headers:{'X-CSRF-Token':CSRF}}).then(function(r){
+          if(r.ok&&r.body.success){load();} else {alert((r.body&&r.body.message)||'Delete failed');}
+        });
+      });
+    });
+  });
+}
+g('addBtn').addEventListener('click',function(){
+  var st=g('addStatus'), email=g('newEmail').value.trim(), pass=g('newPass').value;
+  st.className='form-status';
+  ADMIN.req('/admins',{method:'POST',headers:{'X-CSRF-Token':CSRF},body:JSON.stringify({email:email,password:pass})})
+   .then(function(r){
+     if(r.ok&&r.body.success){st.className='form-status show ok';st.textContent='Admin added ✓';g('newEmail').value='';g('newPass').value='';load();}
+     else{st.className='form-status show bad';st.textContent=(r.body&&r.body.message)||'Could not add admin.';}
+   }).catch(function(){st.className='form-status show bad';st.textContent='Network error.';});
+});
+load();
+</script>
+<script src="../assets/js/theme.js" defer></script>
+</body></html>

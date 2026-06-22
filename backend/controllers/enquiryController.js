@@ -5,6 +5,7 @@ const path = require('path');
 const { query } = require('../database/db');
 const { sendEnquiryEmails } = require('../api/mailer');
 const captcha = require('./captchaController');
+const risk = require('../middleware/riskGuard');
 const { UPLOAD_DIR } = require('../middleware/upload');
 
 const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
@@ -22,13 +23,19 @@ async function create(req, res) {
     if (!b.full_name || !b.email || !EMAIL.test(b.email)) {
       return res.status(400).json({ success: false, message: 'Name and a valid email are required.' });
     }
-    // Verify reCAPTCHA (auto-skips if keys aren't configured server-side).
-    const captchaOk = await captcha.verify(b.captchaToken || b['g-recaptcha-response'], req.ip);
-    if (!captchaOk) {
-      return res.status(400).json({ success: false, message: 'Please complete the verification (reCAPTCHA) and try again.' });
-    }
-    const reference = makeRef();
     const source = req.params.kind || b.source || 'enquiry';
+    const ip = req.ip;
+    // Adaptive captcha: hidden for normal users, required only once this IP is
+    // submitting suspiciously often (likely spam/abuse).
+    if (risk.suspicious(source, ip)) {
+      const ok = await captcha.verify(b.captchaToken || b['g-recaptcha-response'], ip);
+      if (!ok) {
+        return res.status(400).json({ success: false, captchaRequired: true,
+          message: 'Please complete the verification and submit again.' });
+      }
+    }
+    risk.record(source, ip);
+    const reference = makeRef();
     const att = req.attachment || null;
     const sql = `INSERT INTO enquiries
       (reference, full_name, company_name, email, phone, country, industry, company_size,
@@ -46,7 +53,7 @@ async function create(req, res) {
     const { rows } = await query(sql, vals);
     const saved = rows[0];
     sendEnquiryEmails(saved).catch((e) => console.error('[mailer]', e.message));
-    return res.status(201).json({ success: true, reference, message: 'Enquiry received.' });
+    return res.status(201).json({ success: true, reference, message: 'Enquiry received.', captchaRequired: risk.suspicious(source, ip) });
   } catch (e) {
     console.error('[enquiry.create]', e.message);
     return res.status(500).json({ success: false, message: 'Could not save your enquiry. Please try again.' });

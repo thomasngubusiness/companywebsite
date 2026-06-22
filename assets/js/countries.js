@@ -53,9 +53,10 @@ window.COUNTRIES = [
   function build(sel) {
     var list = window.COUNTRIES.slice().sort(function (a, b) { return a[0].localeCompare(b[0]); });
     var html = '<option value="">Select your country…</option>';
-    html += '<option value="Malaysia">Malaysia (+60)</option>';
-    html += '<option value="" disabled>──────────</option>';
+    html += '<optgroup label="Suggested"><option value="Malaysia">Malaysia (+60)</option></optgroup>';
+    html += '<optgroup label="All countries">';
     list.forEach(function (c) { html += '<option value="' + c[0] + '">' + c[0] + ' (' + c[1] + ')</option>'; });
+    html += '</optgroup>';
     sel.innerHTML = html;
   }
   function init() {

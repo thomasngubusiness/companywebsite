@@ -63,13 +63,16 @@
       if (submitBtn) { submitBtn.disabled = true; submitBtn.innerHTML = '<span class="spinner"></span> Submitting…'; }
       hideStatus(status);
 
-      // reCAPTCHA (if this page rendered a widget). Require a token before sending.
+      // Adaptive reCAPTCHA: only present once the server has revealed a widget
+      // for this form (i.e. this visitor looked suspicious). Normal users skip it.
+      var capHolder = form.querySelector('[data-captcha-holder]');
+      var capId = capHolder ? capHolder.id : null;
       var capToken = '';
-      if (window.ENQ_RECAPTCHA && window.ENQ_RECAPTCHA.provider === 'recaptcha') {
-        try { capToken = grecaptcha.getResponse(window.ENQ_RECAPTCHA.widgetId); } catch (e) {}
+      if (capId && window.SiteCaptcha && SiteCaptcha.isShown(capId)) {
+        capToken = SiteCaptcha.token(capId);
         if (!capToken) {
           if (submitBtn) { submitBtn.disabled = false; submitBtn.innerHTML = original; }
-          showStatus(status, 'bad', 'Please complete the “I’m not a robot” check before submitting.');
+          showStatus(status, 'bad', 'Please complete the verification, then submit again.');
           return;
         }
       }
@@ -97,21 +100,19 @@
       fetch(endpoint, fetchOpts)
         .then(function (r) { return r.json().then(function (j) { return { ok: r.ok, body: j }; }); })
         .then(function (res) {
-          if (res.ok && res.body && res.body.success) {
-            finishOk(res.body.reference || refNumber());
-            return { handled: true };
-          }
+          if (res.ok && res.body && res.body.success) { finishOk(res.body.reference || refNumber()); return; }
           var e = new Error('rejected');
           e.serverMessage = (res.body && res.body.message) || 'Server rejected the submission.';
+          e.captchaRequired = !!(res.body && res.body.captchaRequired);
           throw e;
         })
-        .then(function (res) { if (res && res.handled) return; })
         .catch(function (err) {
           // A real server rejection (bad captcha / rejected file) should surface, not be hidden.
           if (err && err.serverMessage) {
             if (submitBtn) { submitBtn.disabled = false; submitBtn.innerHTML = original; }
             showStatus(status, 'bad', err.serverMessage);
-            try { if (window.ENQ_RECAPTCHA) grecaptcha.reset(window.ENQ_RECAPTCHA.widgetId); } catch (e) {}
+            if (err.captchaRequired && capId && window.SiteCaptcha) { SiteCaptcha.show(capId); }
+            else if (capId && window.SiteCaptcha && SiteCaptcha.isShown(capId)) { SiteCaptcha.reset(capId); }
             return;
           }
           // Otherwise: genuine network/offline — graceful demo fallback.

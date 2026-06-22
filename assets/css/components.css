@@ -178,3 +178,12 @@ html[data-theme="light"] .theme-toggle .ic-moon{display:none}
 html[data-theme="light"] .card-icon{color:var(--blue-2)}
 html[data-theme="light"] .feature .feature-ic{color:var(--blue-2)}
 html[data-theme="light"] .nav.scrolled{box-shadow:0 1px 0 var(--hairline),0 8px 30px rgba(20,30,50,.06)}
+
+/* Native <select> popups follow the active theme (fixes the bright/ugly OS dropdown).
+   color-scheme makes the browser render the option list with matching dark/light chrome. */
+html[data-theme="dark"] select{color-scheme:dark}
+html[data-theme="light"] select{color-scheme:light}
+/* Style the option list itself where the browser honours it (Chromium/Win) */
+html[data-theme="dark"] select option,
+html[data-theme="dark"] select optgroup{background:#10131b;color:#e7ecf5}
+html[data-theme="dark"] select optgroup{font-weight:700;color:#9fb0c9}

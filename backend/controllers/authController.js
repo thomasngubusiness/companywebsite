@@ -4,6 +4,7 @@ const bcrypt = require('bcryptjs');
 const { query } = require('../database/db');
 const { sign, setAuthCookie } = require('../middleware/auth');
 const captcha = require('./captchaController');
+const risk = require('../middleware/riskGuard');
 const { sendResetEmail } = require('../api/mailer');
 
 const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
@@ -12,14 +13,21 @@ async function login(req, res) {
   try {
     const { email, password, captchaToken } = req.body || {};
     if (!email || !password) return res.status(400).json({ success: false, message: 'Email and password required.' });
-    if (!(await captcha.verify(captchaToken, req.ip))) {
-      return res.status(400).json({ success: false, message: 'Captcha verification failed. Please try again.', captcha: true });
+    const ip = req.ip;
+    // Captcha stays hidden until this IP looks like a brute-force source.
+    if (risk.suspicious('login', ip) && !(await captcha.verify(captchaToken, ip))) {
+      return res.status(401).json({ success: false, captchaRequired: true,
+        message: 'Please complete the verification to continue.' });
     }
     const { rows } = await query('SELECT * FROM admins WHERE email = $1', [String(email).toLowerCase().trim()]);
     const admin = rows[0];
     if (!admin || !bcrypt.compareSync(password, admin.password_hash)) {
-      return res.status(401).json({ success: false, message: 'Invalid credentials.' });
+      const n = risk.record('login', ip);
+      return res.status(401).json({ success: false,
+        captchaRequired: n >= risk.threshold('login'),
+        message: 'Invalid credentials.' });
     }
+    risk.clear('login', ip); // a good sign-in resets the counter
     const role = admin.role || 'admin';
     setAuthCookie(res, sign({ id: admin.id, email: admin.email, role }));
     res.json({ success: true, email: admin.email, role });

@@ -35,6 +35,7 @@
     </div>
   </div>
 </div>
+<script src="../assets/js/captcha.js"></script>
 <script>
 (function () {
   'use strict';
@@ -42,20 +43,9 @@
   function g(id){return document.getElementById(id);}
   var provider = 'none', widgetId = null;
 
-  // Load captcha config, then render the Google widget if configured.
-  fetch(API + '/captcha').then(function (r){ return r.json(); }).then(function (d){
-    provider = d.provider;
-    if (provider === 'recaptcha' && d.siteKey) {
-      window.__onRecaptcha = function () {
-        try { widgetId = grecaptcha.render('recaptcha', { sitekey: d.siteKey, theme: (document.documentElement.getAttribute('data-theme') === 'light' ? 'light' : 'dark') }); } catch (e) {}
-      };
-      var s = document.createElement('script');
-      s.src = 'https://www.google.com/recaptcha/api.js?onload=__onRecaptcha&render=explicit';
-      s.async = true; s.defer = true; document.head.appendChild(s);
-    } else {
-      g('recaptcha').style.display = 'none'; // captcha not configured yet
-    }
-  }).catch(function () { g('recaptcha').style.display = 'none'; });
+  // Adaptive: the captcha stays hidden and is only shown if the server reports
+  // too many failed attempts (likely brute force).
+  g('recaptcha').style.display = 'none';
 
   if (location.search.indexOf('timeout=1') > -1) {
     var s0 = document.querySelector('#loginForm .form-status'); s0.className='form-status show bad'; s0.textContent='Your session timed out. Please sign in again.';
@@ -68,9 +58,9 @@
     var email = lForm.email.value.trim(), password = lForm.password.value;
     if (!email || !password) { lSt.className='form-status show bad'; lSt.textContent='Enter email and password.'; return; }
     var token = '';
-    if (provider === 'recaptcha') {
-      try { token = grecaptcha.getResponse(widgetId); } catch (e) {}
-      if (!token) { lSt.className='form-status show bad'; lSt.textContent='Please complete the reCAPTCHA check.'; return; }
+    if (window.SiteCaptcha && SiteCaptcha.isShown('recaptcha')) {
+      token = SiteCaptcha.token('recaptcha');
+      if (!token) { lSt.className='form-status show bad'; lSt.textContent='Please complete the verification, then sign in.'; return; }
     }
     busy = true; lBtn.disabled = true; var old = lBtn.innerHTML; lBtn.innerHTML = '<span class="spinner"></span> Signing in…'; lSt.className='form-status';
     fetch(API + '/login', { method:'POST', headers:{'Content-Type':'application/json'}, credentials:'include',
@@ -80,7 +70,8 @@
         if (res.ok && res.j && res.j.success) { location.href = 'dashboard.html'; return; }
         busy = false; lBtn.disabled = false; lBtn.innerHTML = old;
         lSt.className='form-status show bad'; lSt.textContent = (res.j && res.j.message) || 'Sign in failed.';
-        try { if (provider === 'recaptcha') grecaptcha.reset(widgetId); } catch (e) {}
+        if (res.j && res.j.captchaRequired && window.SiteCaptcha) { SiteCaptcha.show('recaptcha'); }
+        else if (window.SiteCaptcha && SiteCaptcha.isShown('recaptcha')) { SiteCaptcha.reset('recaptcha'); }
       })
       .catch(function () { busy=false; lBtn.disabled=false; lBtn.innerHTML=old; lSt.className='form-status show bad'; lSt.textContent='Could not reach the server.'; });
   }

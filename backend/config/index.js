@@ -10,6 +10,7 @@ module.exports = {
   jwtSecret: process.env.JWT_SECRET || 'dev_insecure_secret_change_me',
   jwtExpires: process.env.JWT_EXPIRES || '15m',
   admin: { email: process.env.ADMIN_EMAIL, password: process.env.ADMIN_PASSWORD },
+  recaptcha: { siteKey: process.env.RECAPTCHA_SITE_KEY || '', secret: process.env.RECAPTCHA_SECRET || '' },
   databaseUrl: process.env.DATABASE_URL || '',
   dbPath: process.env.DB_PATH || path.join(__dirname, '..', 'database', 'enquiries.db'),
   mail: {

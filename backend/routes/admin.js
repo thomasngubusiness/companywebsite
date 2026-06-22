@@ -16,7 +16,7 @@ const resetLimiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 6, standardHeade
 
 // ── Public auth ──
 router.get('/csrf', issueToken, (_req, res) => res.json({ success: true, csrf: res.locals.csrf }));
-router.get('/captcha', captcha.issue);
+router.get('/captcha', captcha.info);
 router.post('/login', loginLimiter, auth.login);
 router.post('/logout', auth.logout);
 router.post('/forgot', resetLimiter, auth.forgot);

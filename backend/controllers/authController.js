@@ -10,10 +10,10 @@ const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 
 async function login(req, res) {
   try {
-    const { email, password, captchaId, captchaAnswer } = req.body || {};
+    const { email, password, captchaToken } = req.body || {};
     if (!email || !password) return res.status(400).json({ success: false, message: 'Email and password required.' });
-    if (!captcha.verify(captchaId, captchaAnswer)) {
-      return res.status(400).json({ success: false, message: 'Captcha incorrect. Please try again.', captcha: true });
+    if (!(await captcha.verify(captchaToken, req.ip))) {
+      return res.status(400).json({ success: false, message: 'Captcha verification failed. Please try again.', captcha: true });
     }
     const { rows } = await query('SELECT * FROM admins WHERE email = $1', [String(email).toLowerCase().trim()]);
     const admin = rows[0];

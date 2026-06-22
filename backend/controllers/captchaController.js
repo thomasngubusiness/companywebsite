@@ -1,31 +1,36 @@
 'use strict';
-const crypto = require('crypto');
-const DISABLED = process.env.CAPTCHA_DISABLED === 'true';
-const store = new Map(); // id -> { answer, expires }
+const config = require('../config');
 
-function gc() {
-  const now = Date.now();
-  for (const [k, v] of store) if (v.expires < now) store.delete(k);
+// Public info for the login page: which captcha provider + the site key.
+function info(_req, res) {
+  res.json({
+    success: true,
+    provider: config.recaptcha.secret && config.recaptcha.siteKey ? 'recaptcha' : 'none',
+    siteKey: config.recaptcha.siteKey || '',
+  });
 }
 
-function issue(_req, res) {
-  gc();
-  const a = Math.floor(Math.random() * 9) + 1;
-  const b = Math.floor(Math.random() * 9) + 1;
-  const id = crypto.randomBytes(12).toString('hex');
-  store.set(id, { answer: String(a + b), expires: Date.now() + 5 * 60 * 1000 });
-  res.json({ success: true, id, question: `${a} + ${b} = ?`, disabled: DISABLED });
+// Verify a reCAPTCHA token with Google. If not configured, captcha is skipped
+// (so the login never locks out before you've set the keys).
+async function verify(token, ip) {
+  if (!config.recaptcha.secret) return true;
+  if (!token) return false;
+  try {
+    const params = new URLSearchParams();
+    params.append('secret', config.recaptcha.secret);
+    params.append('response', token);
+    if (ip) params.append('remoteip', ip);
+    const r = await fetch('https://www.google.com/recaptcha/api/siteverify', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: params.toString(),
+    });
+    const d = await r.json();
+    return !!(d && d.success);
+  } catch (e) {
+    console.error('[captcha.verify]', e.message);
+    return false;
+  }
 }
 
-// One-time verification. Returns true if disabled or correct.
-function verify(id, answer) {
-  if (DISABLED) return true;
-  if (!id) return false;
-  const e = store.get(id);
-  if (!e) return false;
-  store.delete(id);
-  if (e.expires < Date.now()) return false;
-  return String(answer == null ? '' : answer).trim() === e.answer;
-}
-
-module.exports = { issue, verify, DISABLED };
+module.exports = { info, verify };

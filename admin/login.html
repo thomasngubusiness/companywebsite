@@ -10,24 +10,19 @@
   <div class="glass login-card">
     <a class="brand" href="../index.html" style="margin-bottom:18px"><span class="mark"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M9 12l2 2 4-4"/></svg></span><span>[Company]<small>Security</small></span></a>
 
-    <!-- SIGN IN -->
     <div id="loginView">
       <h2 style="font-size:1.5rem">Admin sign in</h2>
       <p style="color:var(--ink-3);font-size:.92rem;margin-bottom:18px">Authorized personnel only.</p>
       <form id="loginForm" novalidate onsubmit="return false">
         <div class="field" style="margin-bottom:14px"><label>Email</label><input type="email" name="email" autocomplete="username" required placeholder="admin@example.com"><span class="err"></span></div>
         <div class="field" style="margin-bottom:14px"><label>Password</label><input type="password" name="password" autocomplete="current-password" required placeholder="••••••••"><span class="err"></span></div>
-        <div class="field" style="margin-bottom:14px">
-          <label>Verification — solve <strong id="capQ">…</strong> <button type="button" id="capRefresh" title="New question" style="border:0;background:none;cursor:pointer;color:var(--blue-2);font-size:.85rem">↻</button></label>
-          <input type="text" name="captcha" inputmode="numeric" autocomplete="off" placeholder="Answer"><span class="err"></span>
-        </div>
+        <div id="recaptcha" style="margin-bottom:14px"></div>
         <div class="form-status" role="status" aria-live="polite"></div>
         <button id="loginBtn" class="btn btn-primary btn-block btn-lg" type="button" style="margin-top:8px">Sign In</button>
       </form>
       <p style="margin-top:14px;text-align:center;font-size:.9rem"><a href="#" id="forgotLink">Forgot password?</a></p>
     </div>
 
-    <!-- FORGOT -->
     <div id="forgotView" style="display:none">
       <h2 style="font-size:1.5rem">Reset password</h2>
       <p style="color:var(--ink-3);font-size:.92rem;margin-bottom:18px">Enter your admin email and we'll send a reset link.</p>
@@ -45,36 +40,47 @@
   'use strict';
   var API = (window.SITE_CONFIG && window.SITE_CONFIG.apiBase || '/api') + '/admin';
   function g(id){return document.getElementById(id);}
-  var capId = null;
+  var provider = 'none', widgetId = null;
 
-  function loadCaptcha() {
-    fetch(API + '/captcha').then(function (r) { return r.json(); }).then(function (d) {
-      capId = d.id; g('capQ').textContent = d.question || '…';
-    }).catch(function () { g('capQ').textContent = '(captcha unavailable)'; });
-  }
-  loadCaptcha();
-  g('capRefresh').addEventListener('click', loadCaptcha);
+  // Load captcha config, then render the Google widget if configured.
+  fetch(API + '/captcha').then(function (r){ return r.json(); }).then(function (d){
+    provider = d.provider;
+    if (provider === 'recaptcha' && d.siteKey) {
+      window.__onRecaptcha = function () {
+        try { widgetId = grecaptcha.render('recaptcha', { sitekey: d.siteKey, theme: (document.documentElement.getAttribute('data-theme') === 'light' ? 'light' : 'dark') }); } catch (e) {}
+      };
+      var s = document.createElement('script');
+      s.src = 'https://www.google.com/recaptcha/api.js?onload=__onRecaptcha&render=explicit';
+      s.async = true; s.defer = true; document.head.appendChild(s);
+    } else {
+      g('recaptcha').style.display = 'none'; // captcha not configured yet
+    }
+  }).catch(function () { g('recaptcha').style.display = 'none'; });
 
   if (location.search.indexOf('timeout=1') > -1) {
-    var s = document.querySelector('#loginForm .form-status'); s.className = 'form-status show bad'; s.textContent = 'Your session timed out. Please sign in again.';
+    var s0 = document.querySelector('#loginForm .form-status'); s0.className='form-status show bad'; s0.textContent='Your session timed out. Please sign in again.';
   }
 
   // ---- sign in ----
   var lForm = g('loginForm'), lBtn = g('loginBtn'), lSt = lForm.querySelector('.form-status'), busy = false;
   function login() {
     if (busy) return;
-    var email = lForm.email.value.trim(), password = lForm.password.value, captchaAnswer = lForm.captcha.value.trim();
+    var email = lForm.email.value.trim(), password = lForm.password.value;
     if (!email || !password) { lSt.className='form-status show bad'; lSt.textContent='Enter email and password.'; return; }
-    if (!captchaAnswer) { lSt.className='form-status show bad'; lSt.textContent='Please answer the verification question.'; return; }
+    var token = '';
+    if (provider === 'recaptcha') {
+      try { token = grecaptcha.getResponse(widgetId); } catch (e) {}
+      if (!token) { lSt.className='form-status show bad'; lSt.textContent='Please complete the reCAPTCHA check.'; return; }
+    }
     busy = true; lBtn.disabled = true; var old = lBtn.innerHTML; lBtn.innerHTML = '<span class="spinner"></span> Signing in…'; lSt.className='form-status';
     fetch(API + '/login', { method:'POST', headers:{'Content-Type':'application/json'}, credentials:'include',
-      body: JSON.stringify({ email: email, password: password, captchaId: capId, captchaAnswer: captchaAnswer }) })
+      body: JSON.stringify({ email: email, password: password, captchaToken: token }) })
       .then(function (r) { return r.json().catch(function(){return{};}).then(function (j) { return { ok:r.ok, j:j }; }); })
       .then(function (res) {
         if (res.ok && res.j && res.j.success) { location.href = 'dashboard.html'; return; }
         busy = false; lBtn.disabled = false; lBtn.innerHTML = old;
         lSt.className='form-status show bad'; lSt.textContent = (res.j && res.j.message) || 'Sign in failed.';
-        loadCaptcha(); lForm.captcha.value = '';
+        try { if (provider === 'recaptcha') grecaptcha.reset(widgetId); } catch (e) {}
       })
       .catch(function () { busy=false; lBtn.disabled=false; lBtn.innerHTML=old; lSt.className='form-status show bad'; lSt.textContent='Could not reach the server.'; });
   }

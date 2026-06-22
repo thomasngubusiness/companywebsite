@@ -81,7 +81,7 @@ function load(){
       var roles=['sales','admin','super'];
       var roleSel='<select class="x" data-role title="Change role">'+roles.map(function(rr){return '<option value="'+rr+'"'+((a.role||'sales')===rr?' selected':'')+'>'+rr+'</option>';}).join('')+'</select>';
       var actions=roleSel+'<button class="x" data-pw>Reset password</button>'+(a.id===(ME&&ME.id)?'':'<button class="x del" data-del>Delete</button>');
-      return '<div class="adm-row" data-id="'+a.id+'" data-email="'+esc(a.email)+'"><div><div class="em">'+esc(a.email)+role+'</div>'+
+      return '<div class="adm-row" data-id="'+a.id+'" data-email="'+esc(a.email)+'"><div><div class="em">'+esc(a.email)+'</div>'+
         '<div class="meta">Added '+esc((a.created_at||'').slice(0,10))+(a.id===(ME&&ME.id)?' · you':'')+'</div></div>'+
         '<div class="adm-actions">'+actions+'</div></div>';
     }).join('')|| '<p style="color:var(--ink-4)">No admins.</p>';

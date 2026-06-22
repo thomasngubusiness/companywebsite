@@ -33,7 +33,7 @@
     </nav>
   </aside>
   <main class="admin-main">
-    <div class="admin-top"><div><h1 style="font-size:1.6rem;margin:0">Site Content</h1><p style="color:var(--ink-3);margin:0">Edit what appears on the public website. Changes go live on save.</p></div></div>
+    <div class="admin-top"><div><h1 style="font-size:1.6rem;margin:0">Site Content</h1><p style="color:var(--ink-3);margin:0">Pick a section to edit. Changes go live on save.</p></div><select id="secSel" style="padding:11px 14px;border-radius:12px;background:var(--glass-3);border:1px solid var(--glass-stroke);color:var(--ink);font-family:inherit;font-size:.95rem;min-width:230px"></select></div>
     <div id="editors"></div>
   </main>
 </div>
@@ -126,19 +126,30 @@ function save(key,data,note){
    .catch(function(){note.textContent='Save failed (network).';});
 }
 
+var CARDS=[];
 function build(){
-  var box=g('editors'); box.innerHTML='';
-  box.appendChild(listEditor({key:'about_team',title:'About — Leadership Team',
-    fields:[{k:'name',label:'Name'},{k:'role',label:'Role'},{k:'bio',label:'Short bio',ta:true}],
-    items:CONTENT.about_team||SITE_DEFAULTS.about_team||[]}));
-  box.appendChild(listEditor({key:'insights',title:'Latest Insights (blog/news cards)',
-    fields:[{k:'tag',label:'Tag'},{k:'title',label:'Title'},{k:'summary',label:'Summary',ta:true},{k:'url',label:'Link URL'}],
-    items:CONTENT.insights||SITE_DEFAULTS.insights||[]}));
-  box.appendChild(listEditor({key:'careers',title:'Careers — Open Positions',wrap:'positions',
-    fields:[{k:'title',label:'Position'},{k:'type',label:'Type (Remote / Hybrid / Shift)'},{k:'desc',label:'Description',ta:true}],
-    items:(CONTENT.careers&&CONTENT.careers.positions)||(SITE_DEFAULTS.careers&&SITE_DEFAULTS.careers.positions)||[]}));
-  box.appendChild(partnersEditor(CONTENT.partners||SITE_DEFAULTS.partners));
-  box.appendChild(contactEditor(CONTENT.contact||SITE_DEFAULTS.contact));
+  var box=g('editors'); box.innerHTML=''; CARDS=[];
+  var sel=g('secSel'); sel.innerHTML='';
+  var sections=[
+    {label:'About — Leadership Team', make:function(){return listEditor({key:'about_team',title:'About — Leadership Team',
+      fields:[{k:'name',label:'Name'},{k:'role',label:'Role'},{k:'bio',label:'Short bio',ta:true}],
+      items:CONTENT.about_team||SITE_DEFAULTS.about_team||[]});}},
+    {label:'Latest Insights', make:function(){return listEditor({key:'insights',title:'Latest Insights (blog/news cards)',
+      fields:[{k:'tag',label:'Tag'},{k:'title',label:'Title'},{k:'summary',label:'Summary',ta:true},{k:'url',label:'Link URL'}],
+      items:CONTENT.insights||SITE_DEFAULTS.insights||[]});}},
+    {label:'Careers — Open Positions', make:function(){return listEditor({key:'careers',title:'Careers — Open Positions',wrap:'positions',
+      fields:[{k:'title',label:'Position'},{k:'type',label:'Type (Remote / Hybrid / Shift)'},{k:'desc',label:'Description',ta:true}],
+      items:(CONTENT.careers&&CONTENT.careers.positions)||(SITE_DEFAULTS.careers&&SITE_DEFAULTS.careers.positions)||[]});}},
+    {label:'Partners', make:function(){return partnersEditor(CONTENT.partners||SITE_DEFAULTS.partners);}},
+    {label:'Contact', make:function(){return contactEditor(CONTENT.contact||SITE_DEFAULTS.contact);}}
+  ];
+  sections.forEach(function(sec,i){
+    var card=sec.make(); card.style.display = i===0 ? '' : 'none';
+    box.appendChild(card); CARDS.push(card);
+    var opt=document.createElement('option'); opt.value=String(i); opt.textContent=sec.label; sel.appendChild(opt);
+  });
+  sel.value='0';
+  sel.onchange=function(){ CARDS.forEach(function(c,i){ c.style.display = (String(i)===sel.value) ? '' : 'none'; }); };
 }
 
 ADMIN.csrf().then(function(t){CSRF=t;});

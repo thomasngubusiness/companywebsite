@@ -13,7 +13,7 @@
       <a href="dashboard.html">📊 Dashboard</a>
       <a href="enquiries.html" class="active">📨 Enquiries</a>
       <a href="content.html">📝 Content</a>
-      <a href="admins.html">👥 Admins</a>
+      <a href="admins.html">👥 Users</a>
       <a href="settings.html">⚙ Settings</a>
       <a href="../index.html">🌐 View Site</a>
       <a href="#" id="logoutBtn">⎋ Sign Out</a>
@@ -28,7 +28,7 @@
     </div>
     <div class="glass" style="padding:6px">
       <div class="table-wrap">
-        <table class="data"><thead><tr>
+        <table class="data"><colgroup><col style="width:12%"><col style="width:10%"><col style="width:11%"><col style="width:12%"><col style="width:21%"><col style="width:16%"><col style="width:13%"><col style="width:5%"></colgroup><thead><tr>
           <th>Ref</th><th>Date</th><th>Name</th><th>Company</th><th>Service</th><th>Email</th><th>Status</th><th></th>
         </tr></thead><tbody id="rows"><tr><td colspan="8" style="text-align:center;color:var(--ink-4);padding:30px">Loading…</td></tr></tbody></table>
       </div>
@@ -59,12 +59,12 @@ function load() {
     tb.innerHTML = list.map(function (e) {
       var opts = STAT.map(function(s){return '<option'+(s===e.status?' selected':'')+'>'+s+'</option>';}).join('');
       return '<tr data-id="'+e.enquiry_id+'">'+
-        '<td><code>'+esc(e.reference||('#'+e.enquiry_id))+'</code></td>'+
-        '<td>'+esc((e.created_at||'').slice(0,16))+'</td>'+
-        '<td>'+esc(e.full_name)+'</td>'+
-        '<td>'+esc(e.company_name)+'</td>'+
-        '<td>'+esc(e.service)+'</td>'+
-        '<td><a href="mailto:'+esc(e.email)+'">'+esc(e.email)+'</a></td>'+
+        '<td class="tr" title="'+esc(e.reference||'')+'"><code>'+esc(e.reference||('#'+e.enquiry_id))+'</code>'+(e.attachment_stored?' <a href="'+ADMIN.API+'/enquiries/'+e.enquiry_id+'/attachment" target="_blank" rel="noopener" title="Download attachment: '+esc(e.attachment_name||'')+'" style="text-decoration:none">\uD83D\uDCCE</a>':'')+'</td>'+
+        '<td class="tr">'+esc((e.created_at||'').slice(0,10))+'</td>'+
+        '<td class="tr" title="'+esc(e.full_name||'')+'">'+esc(e.full_name)+'</td>'+
+        '<td class="tr" title="'+esc(e.company_name||'')+'">'+esc(e.company_name)+'</td>'+
+        '<td class="tr" title="'+esc(e.service||'')+'">'+esc(e.service)+'</td>'+
+        '<td class="tr" title="'+esc(e.email||'')+'"><a href="mailto:'+esc(e.email)+'">'+esc(e.email)+'</a></td>'+
         (canEdit() ? ('<td><select class="status-pill '+cls(e.status)+'" data-status>'+opts+'</select></td>') : ('<td><span class="status-pill '+cls(e.status)+'" style="padding:4px 10px;display:inline-block">'+esc(e.status)+'</span></td>'))+
         (canEdit() ? '<td class="row-actions"><button class="icon-btn" data-del title="Delete">🗑</button></td>' : '<td></td>')+'</tr>';
     }).join('');

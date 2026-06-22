@@ -1,7 +1,11 @@
 'use strict';
 const crypto = require('crypto');
+const fs = require('fs');
+const path = require('path');
 const { query } = require('../database/db');
 const { sendEnquiryEmails } = require('../api/mailer');
+const captcha = require('./captchaController');
+const { UPLOAD_DIR } = require('../middleware/upload');
 
 const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 const STATUSES = ['New', 'Contacted', 'In Progress', 'Proposal Sent', 'Closed'];
@@ -18,18 +22,26 @@ async function create(req, res) {
     if (!b.full_name || !b.email || !EMAIL.test(b.email)) {
       return res.status(400).json({ success: false, message: 'Name and a valid email are required.' });
     }
+    // Verify reCAPTCHA (auto-skips if keys aren't configured server-side).
+    const captchaOk = await captcha.verify(b.captchaToken || b['g-recaptcha-response'], req.ip);
+    if (!captchaOk) {
+      return res.status(400).json({ success: false, message: 'Please complete the verification (reCAPTCHA) and try again.' });
+    }
     const reference = makeRef();
     const source = req.params.kind || b.source || 'enquiry';
+    const att = req.attachment || null;
     const sql = `INSERT INTO enquiries
       (reference, full_name, company_name, email, phone, country, industry, company_size,
-       service, contact_method, meeting_date, budget, timeline, project_description, source, ip, status)
-      VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,'New')
+       service, contact_method, meeting_date, budget, timeline, project_description, source, ip,
+       attachment_stored, attachment_name, status)
+      VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,'New')
       RETURNING *`;
     const vals = [
       reference, b.full_name, b.company_name || null, b.email, b.phone || null, b.country || null,
       b.industry || null, b.company_size || null, b.service || null, b.contact_method || null,
       b.meeting_date || null, b.budget || null, b.timeline || null,
       b.project_description || b.subject || null, source, req.ip,
+      att ? att.stored : null, att ? att.original : null,
     ];
     const { rows } = await query(sql, vals);
     const saved = rows[0];
@@ -120,4 +132,25 @@ async function exportCsv(_req, res) {
   }
 }
 
-module.exports = { create, list, stats, updateStatus, remove, exportCsv, STATUSES };
+async function downloadAttachment(req, res) {
+  try {
+    const row = (await query('SELECT attachment_stored, attachment_name FROM enquiries WHERE enquiry_id=$1', [req.params.id])).rows[0];
+    if (!row || !row.attachment_stored) return res.status(404).json({ success: false, message: 'No attachment.' });
+    // Guard against any path traversal — only ever a bare random filename.
+    const safe = path.basename(row.attachment_stored);
+    const full = path.join(UPLOAD_DIR, safe);
+    if (!full.startsWith(path.resolve(UPLOAD_DIR)) || !fs.existsSync(full)) {
+      return res.status(404).json({ success: false, message: 'File no longer available.' });
+    }
+    const dl = (row.attachment_name || safe).replace(/[\r\n"]/g, '');
+    res.setHeader('Content-Type', 'application/octet-stream'); // never serve inline / never execute
+    res.setHeader('X-Content-Type-Options', 'nosniff');
+    res.setHeader('Content-Disposition', 'attachment; filename="' + dl + '"');
+    fs.createReadStream(full).pipe(res);
+  } catch (e) {
+    console.error('[enquiry.downloadAttachment]', e.message);
+    res.status(500).json({ success: false, message: 'Failed to fetch attachment.' });
+  }
+}
+
+module.exports = { create, list, stats, updateStatus, remove, exportCsv, downloadAttachment, STATUSES };

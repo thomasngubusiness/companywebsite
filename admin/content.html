@@ -28,7 +28,7 @@
       <a href="dashboard.html">📊 Dashboard</a>
       <a href="enquiries.html">📨 Enquiries</a>
       <a href="content.html" class="active">📝 Content</a>
-      <a href="admins.html">👥 Admins</a>
+      <a href="admins.html">👥 Users</a>
       <a href="settings.html">⚙ Settings</a>
       <a href="../index.html">🌐 View Site</a>
       <a href="#" id="logoutBtn">⎋ Sign Out</a>
@@ -126,7 +126,7 @@ function contactEditor(c){
 function save(key,data,note){
   note.textContent='Saving…';
   ADMIN.req('/content/'+key,{method:'PUT',headers:{'X-CSRF-Token':CSRF},body:JSON.stringify({data:data})})
-   .then(function(r){ if(r.ok&&r.body.success){note.textContent='Saved ✓ — live on the site now.';} else {note.textContent='Save failed: '+((r.body&&r.body.message)||'error');} })
+   .then(function(r){ if(r.ok&&r.body.success){note.textContent='Saved ✓ — live on the site now.'; if(window.ADMIN&&ADMIN.toast)ADMIN.toast('Changes saved — live on the site');} else {note.textContent='Save failed: '+((r.body&&r.body.message)||'error'); if(window.ADMIN&&ADMIN.toast)ADMIN.toast((r.body&&r.body.message)||'Save failed','bad');} })
    .catch(function(){note.textContent='Save failed (network).';});
 }
 

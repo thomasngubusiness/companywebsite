@@ -18,11 +18,13 @@
 .toolbar{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px;align-items:center}
 .toolbar input,.toolbar select{padding:10px 13px;border-radius:10px;background:var(--glass-3);border:1px solid var(--glass-stroke);color:#fff;font-family:inherit;font-size:.9rem}
 .table-wrap{overflow-x:auto;overflow-y:visible;border-radius:var(--r16);-webkit-overflow-scrolling:touch}
-table.data{width:100%;border-collapse:collapse;font-size:.88rem;min-width:760px}
+table.data{width:100%;border-collapse:collapse;font-size:.86rem;table-layout:fixed}
+table.data td.tr{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:0}
+table.data td,table.data th{overflow:hidden;text-overflow:ellipsis}
 table.data th,table.data td{text-align:left;padding:12px 14px;border-bottom:1px solid var(--hairline)}
 table.data th{color:var(--ink-4);font-size:.74rem;text-transform:uppercase;letter-spacing:.08em;position:sticky;top:0;background:var(--bg-2)}
 table.data tr:hover td{background:var(--glass-3)}
-.status-pill{font-size:.72rem;font-weight:700;padding:4px 10px;border-radius:999px;border:1px solid var(--glass-stroke)}
+.status-pill{font-size:.72rem;font-weight:700;padding:4px 8px;border-radius:999px;border:1px solid var(--glass-stroke);max-width:100%}
 .s-New{background:rgba(10,132,255,.16);color:#6bb4ff}
 .s-Contacted{background:rgba(50,173,230,.16);color:#7fd0f5}
 .s-InProgress{background:rgba(255,159,10,.16);color:#ffbf5c}
@@ -33,3 +35,9 @@ table.data tr:hover td{background:var(--glass-3)}
 .row-actions{display:flex;gap:6px}
 .icon-btn{width:32px;height:32px;display:grid;place-items:center;border-radius:9px;border:1px solid var(--glass-stroke);background:var(--glass-3);color:var(--ink-2);cursor:pointer}
 .icon-btn:hover{color:#fff;border-color:var(--glass-stroke-2)}
+
+/* Toast notifications (top-right) */
+.admin-toast{position:fixed;top:20px;right:20px;z-index:2000;padding:14px 20px;border-radius:14px;font-weight:600;font-size:.95rem;color:#fff;box-shadow:0 12px 40px rgba(0,0,0,.28);transform:translateX(130%);transition:transform .4s cubic-bezier(.34,1.56,.64,1);display:flex;align-items:center;gap:10px;max-width:360px}
+.admin-toast.show{transform:none}
+.admin-toast.ok{background:linear-gradient(135deg,#30D158,#28a745)}
+.admin-toast.bad{background:linear-gradient(135deg,#FF453A,#d70015)}

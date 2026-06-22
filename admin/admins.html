@@ -1,6 +1,6 @@
 <!DOCTYPE html><html lang="en"><head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Admins — [Company] Security Admin</title><meta name="robots" content="noindex">
+<title>Users — [Company] Security Admin</title><meta name="robots" content="noindex">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap">
 <link rel="stylesheet" href="../assets/css/style.css"><link rel="stylesheet" href="../assets/css/components.css"><link rel="stylesheet" href="assets/admin.css">
 <script>(function(){try{var o=sessionStorage.getItem("theme-override");var h=new Date().getHours();document.documentElement.setAttribute("data-theme",o||((h>=7&&h<19)?"light":"dark"));}catch(e){document.documentElement.setAttribute("data-theme","dark");}})();</script>
@@ -31,25 +31,26 @@
       <a href="dashboard.html">📊 Dashboard</a>
       <a href="enquiries.html">📨 Enquiries</a>
       <a href="content.html">📝 Content</a>
-      <a href="admins.html" class="active">👥 Admins</a>
+      <a href="admins.html" class="active">👥 Users</a>
       <a href="settings.html">⚙ Settings</a>
       <a href="../index.html">🌐 View Site</a>
       <a href="#" id="logoutBtn">⎋ Sign Out</a>
     </nav>
   </aside>
   <main class="admin-main">
-    <div class="admin-top"><div><h1 style="font-size:1.6rem;margin:0">Admin Users</h1><p style="color:var(--ink-3);margin:0">Add or remove people who can sign in to this dashboard.</p></div></div>
+    <div class="admin-top"><div><h1 style="font-size:1.6rem;margin:0">Users</h1><p style="color:var(--ink-3);margin:0">Add or remove people who can sign in to this dashboard.</p></div></div>
     <div class="banner" id="notSuper" style="display:none">You are a standard admin — you can view the list but only a <strong>super admin</strong> can add, remove or reset other admins. Use <a href="settings.html">Settings</a> to change your own account.</div>
 
     <section class="glass cms-card" id="addCard">
-      <h3 style="margin:0 0 14px">Add a new admin</h3>
+      <h3 style="margin:0 0 14px">Add a new user</h3>
       <div class="form-grid">
         <div class="field"><div class="cms-lbl">Email</div><input id="newEmail" type="email" placeholder="person@email.com"></div>
-        <div class="field"><div class="cms-lbl">Password (min 8 chars)</div><input id="newPass" type="text" placeholder="Set a strong password"></div>
+        <div class="field"><div class="cms-lbl">Password (min 8 chars)</div><input id="newPass" type="password" placeholder="Set a strong password"></div>
+        <div class="field"><div class="cms-lbl">Confirm password</div><input id="newPass2" type="password" placeholder="Re-type the password"></div>
         <div class="field"><div class="cms-lbl">Role</div><select id="newRole" style="width:100%;font-family:inherit;font-size:.92rem;color:var(--ink);padding:10px 12px;border-radius:9px;background:var(--bg-2);border:1px solid var(--glass-stroke)"><option value="sales">Sales — view enquiries only</option><option value="admin">Admin — edit content &amp; enquiries</option><option value="super">Super — full control</option></select></div>
       </div>
       <div class="form-status" id="addStatus" role="status" aria-live="polite" style="margin-top:10px"></div>
-      <button class="btn btn-primary" id="addBtn" style="margin-top:14px">+ Add admin</button>
+      <button class="btn btn-primary" id="addBtn" style="margin-top:14px">+ Add user</button>
     </section>
 
     <section class="glass cms-card">
@@ -116,12 +117,14 @@ function load(){
 }
 
 g('addBtn').addEventListener('click',function(){
-  var st=g('addStatus'), email=g('newEmail').value.trim(), pass=g('newPass').value;
+  var st=g('addStatus'), email=g('newEmail').value.trim(), pass=g('newPass').value, pass2=g('newPass2')?g('newPass2').value:pass;
   st.className='form-status';
+  if(pass.length<8){st.className='form-status show bad';st.textContent='Password must be at least 8 characters.';return;}
+  if(pass!==pass2){st.className='form-status show bad';st.textContent='Passwords do not match.';return;}
   ADMIN.req('/admins',{method:'POST',headers:{'X-CSRF-Token':CSRF},body:JSON.stringify({email:email,password:pass,role:(g('newRole')?g('newRole').value:'sales')})})
    .then(function(r){
-     if(r.ok&&r.body.success){st.className='form-status show ok';st.textContent='Admin added ✓';g('newEmail').value='';g('newPass').value='';load();}
-     else{st.className='form-status show bad';st.textContent=(r.body&&r.body.message)||'Could not add admin.';}
+     if(r.ok&&r.body.success){st.className='form-status show ok';st.textContent='User added ✓';g('newEmail').value='';g('newPass').value='';if(g('newPass2'))g('newPass2').value='';load();}
+     else{st.className='form-status show bad';st.textContent=(r.body&&r.body.message)||'Could not add user.';}
    }).catch(function(){st.className='form-status show bad';st.textContent='Network error.';});
 });
 </script>

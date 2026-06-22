@@ -29,6 +29,7 @@ router.patch('/me', requireAuth, verifyToken, auth.updateProfile);
 // ── Protected data ──
 router.get('/enquiries', requireAuth, c.list);
 router.get('/enquiries/export', requireAuth, c.exportCsv);
+router.get('/enquiries/:id/attachment', requireAuth, c.downloadAttachment);
 router.get('/stats', requireAuth, c.stats);
 router.patch('/enquiries/:id/status', requireAuth, requireRole(['admin','super']), verifyToken, c.updateStatus);
 router.delete('/enquiries/:id', requireAuth, requireRole(['admin','super']), verifyToken, c.remove);

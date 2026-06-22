@@ -22,6 +22,8 @@ CREATE TABLE IF NOT EXISTS enquiries (
 );
 CREATE INDEX IF NOT EXISTS idx_enquiries_status  ON enquiries(status);
 CREATE INDEX IF NOT EXISTS idx_enquiries_created ON enquiries(created_at);
+ALTER TABLE enquiries ADD COLUMN IF NOT EXISTS attachment_stored TEXT;
+ALTER TABLE enquiries ADD COLUMN IF NOT EXISTS attachment_name TEXT;
 
 CREATE TABLE IF NOT EXISTS admins (
   id            SERIAL PRIMARY KEY,

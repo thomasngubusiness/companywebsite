@@ -63,25 +63,58 @@
       if (submitBtn) { submitBtn.disabled = true; submitBtn.innerHTML = '<span class="spinner"></span> Submitting…'; }
       hideStatus(status);
 
-      var data = {};
-      new FormData(form).forEach(function (val, key) { data[key] = val; });
-      var endpoint = form.getAttribute('action') || (API_BASE + '/enquiries');
+      // reCAPTCHA (if this page rendered a widget). Require a token before sending.
+      var capToken = '';
+      if (window.ENQ_RECAPTCHA && window.ENQ_RECAPTCHA.provider === 'recaptcha') {
+        try { capToken = grecaptcha.getResponse(window.ENQ_RECAPTCHA.widgetId); } catch (e) {}
+        if (!capToken) {
+          if (submitBtn) { submitBtn.disabled = false; submitBtn.innerHTML = original; }
+          showStatus(status, 'bad', 'Please complete the “I’m not a robot” check before submitting.');
+          return;
+        }
+      }
 
-      fetch(endpoint, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
-        body: JSON.stringify(data)
-      })
+      var endpoint = form.getAttribute('action') || (API_BASE + '/enquiries');
+      var fileInput = form.querySelector('input[type=file]');
+      var hasFile = fileInput && fileInput.files && fileInput.files.length > 0;
+      var useMultipart = form.hasAttribute('data-multipart') || hasFile;
+
+      var fetchOpts;
+      if (useMultipart) {
+        // Native multipart so the backend can strictly validate the attachment.
+        var fd = new FormData(form);
+        if (capToken) fd.append('captchaToken', capToken);
+        // Drop an empty file part so the server doesn't process a 0-byte upload.
+        if (!hasFile && fileInput) fd.delete(fileInput.name);
+        fetchOpts = { method: 'POST', headers: { 'X-Requested-With': 'XMLHttpRequest' }, body: fd };
+      } else {
+        var data = {};
+        new FormData(form).forEach(function (val, key) { data[key] = val; });
+        if (capToken) data.captchaToken = capToken;
+        fetchOpts = { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest' }, body: JSON.stringify(data) };
+      }
+
+      fetch(endpoint, fetchOpts)
         .then(function (r) { return r.json().then(function (j) { return { ok: r.ok, body: j }; }); })
         .then(function (res) {
           if (res.ok && res.body && res.body.success) {
             finishOk(res.body.reference || refNumber());
-          } else {
-            throw new Error((res.body && res.body.message) || 'Server rejected the submission.');
+            return { handled: true };
           }
+          var e = new Error('rejected');
+          e.serverMessage = (res.body && res.body.message) || 'Server rejected the submission.';
+          throw e;
         })
-        .catch(function () {
-          // Graceful offline/demo fallback so the UX is complete without a live backend.
+        .then(function (res) { if (res && res.handled) return; })
+        .catch(function (err) {
+          // A real server rejection (bad captcha / rejected file) should surface, not be hidden.
+          if (err && err.serverMessage) {
+            if (submitBtn) { submitBtn.disabled = false; submitBtn.innerHTML = original; }
+            showStatus(status, 'bad', err.serverMessage);
+            try { if (window.ENQ_RECAPTCHA) grecaptcha.reset(window.ENQ_RECAPTCHA.widgetId); } catch (e) {}
+            return;
+          }
+          // Otherwise: genuine network/offline — graceful demo fallback.
           finishOk(refNumber());
         });
 

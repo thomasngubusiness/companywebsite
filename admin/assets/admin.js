@@ -38,7 +38,15 @@ window.ADMIN = (function () {
     });
   }
   function logout() { req('/logout', { method: 'POST' }).finally(function () { location.href = 'login.html'; }); }
-  return { req: req, csrf: csrf, guard: guard, logout: logout, API: API };
+  function toast(msg, kind) {
+    var t = document.createElement('div');
+    t.className = 'admin-toast ' + (kind === 'bad' ? 'bad' : 'ok');
+    t.textContent = (kind === 'bad' ? '⚠  ' : '✓  ') + msg;
+    document.body.appendChild(t);
+    requestAnimationFrame(function () { t.classList.add('show'); });
+    setTimeout(function () { t.classList.remove('show'); setTimeout(function () { if (t.parentNode) t.parentNode.removeChild(t); }, 400); }, 2800);
+  }
+  return { req: req, csrf: csrf, guard: guard, logout: logout, toast: toast, API: API };
 })();
 
 /* 15-minute idle auto-logout. The server also enforces this (sliding 15m JWT),

@@ -7,6 +7,12 @@
   var API = (window.SITE_CONFIG && window.SITE_CONFIG.apiBase || '/api');
   function esc(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
   function nl2br(s) { return esc(s).replace(/\n/g, '<br>'); }
+  function normUrl(u) {
+    u = String(u == null ? '' : u).trim();
+    if (!u) return '';
+    if (/^(https?:\/\/|mailto:|tel:|\/|#)/i.test(u)) return u; // already absolute / relative / anchor
+    return 'https://' + u; // bare domain like example.com/article
+  }
   function nonEmpty(v) { return Array.isArray(v) ? v.length : (v && Object.keys(v).length); }
 
   var ICON = {
@@ -31,12 +37,13 @@
     },
     insights: function (el, list) {
       el.innerHTML = list.map(function (a) {
-        var href = a.url ? esc(a.url) : '#';
+        var raw = normUrl(a.url); var href = raw ? esc(raw) : '#';
+        var ext = /^https?:\/\//i.test(raw) ? ' target="_blank" rel="noopener noreferrer"' : '';
         return '<article class="card glass hover" data-reveal>' +
           '<span class="tag blue">' + esc(a.tag || 'Insight') + '</span>' +
           '<h3 style="margin-top:10px">' + esc(a.title) + '</h3>' +
           '<p>' + esc(a.summary) + '</p>' +
-          '<a class="card-link" href="' + href + '">Read article →</a></article>';
+          '<a class="card-link" href="' + href + '"' + ext + '>Read article →</a></article>';
       }).join('');
     },
     careers: function (el, list) {

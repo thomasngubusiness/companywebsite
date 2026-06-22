@@ -5,7 +5,8 @@
 @media(max-width:820px){.admin-side{position:static;height:auto;border-right:0;border-bottom:1px solid var(--hairline)}}
 .admin-side .brand{margin-bottom:26px}
 .admin-nav a{display:flex;align-items:center;gap:10px;padding:11px 13px;border-radius:12px;color:var(--ink-2);font-weight:500;font-size:.92rem;margin-bottom:4px}
-.admin-nav a.active,.admin-nav a:hover{background:var(--glass-2);color:#fff}
+.admin-nav a.active,.admin-nav a:hover{background:var(--glass-2);color:var(--ink)}
+.admin-nav a.active{box-shadow:inset 3px 0 0 var(--blue);font-weight:600}
 .admin-main{padding:clamp(20px,3vw,38px);min-width:0;overflow-x:hidden}
 .admin-top{display:flex;justify-content:space-between;align-items:center;gap:14px;margin-bottom:26px;flex-wrap:wrap}
 .kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:24px}

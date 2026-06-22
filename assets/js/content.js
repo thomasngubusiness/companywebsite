@@ -51,6 +51,21 @@
     logos: function (el, list) {
       el.innerHTML = list.map(function (name) { return '<span class="logo-pill" data-reveal>' + esc(name) + '</span>'; }).join('');
     },
+    services: function (el, list) {
+      function col(h, txt){ var items=String(txt||'').split('\n').map(function(x){return x.trim();}).filter(Boolean);
+        return '<div><h3>'+esc(h||'')+'</h3><ul class="check-list">'+items.map(function(it){return '<li>'+esc(it)+'</li>';}).join('')+'</ul></div>'; }
+      el.innerHTML = list.map(function (s, i) {
+        var benefits = s.benefits ? '<div style="margin-top:18px"><strong>Benefits:</strong> <span style="color:var(--ink-3)">'+esc(s.benefits)+'</span></div>' : '';
+        return '<section style="padding:0 0 '+(i===list.length-1?'0':'28px')+'"><div class="container"><div class="glass svc-block" data-reveal>'+
+          (s.tag?'<span class="tag blue">'+esc(s.tag)+'</span>':'')+
+          '<h2 style="margin-top:12px">'+esc(s.title)+'</h2>'+
+          (s.intro?'<p class="lede">'+esc(s.intro)+'</p>':'')+
+          '<div class="svc-grid">'+col(s.col1_title,s.col1)+col(s.col2_title,s.col2)+col(s.col3_title,s.col3)+'</div>'+
+          benefits+
+          '<a class="btn btn-glass" href="enquiry.html" style="margin-top:16px">Request this service →</a>'+
+          '</div></div></section>';
+      }).join('');
+    },
     contact: function (el, c) {
       var rows = [
         ['Office', ICON.office, nl2br(c.address || '')],
@@ -77,6 +92,7 @@
         else if (key === 'careers' && content.careers && nonEmpty(content.careers.positions)) R.careers(el, content.careers.positions);
         else if (key === 'partners-strategic' && content.partners && nonEmpty(content.partners.strategic)) R.logos(el, content.partners.strategic);
         else if (key === 'partners-technology' && content.partners && nonEmpty(content.partners.technology)) R.logos(el, content.partners.technology);
+        else if (key === 'services' && nonEmpty(content.services)) R.services(el, content.services);
         else if (key === 'contact' && nonEmpty(content.contact)) R.contact(el, content.contact);
         else return;
         // re-trigger reveal animation on injected nodes

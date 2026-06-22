@@ -23,3 +23,15 @@ window.ADMIN = (function () {
   function logout() { req('/logout', { method: 'POST' }).finally(function () { location.href = 'login.html'; }); }
   return { req: req, csrf: csrf, guard: guard, logout: logout, API: API };
 })();
+
+/* 15-minute idle auto-logout. The server also enforces this (sliding 15m JWT),
+   this just redirects the UI promptly when the admin walks away. */
+(function () {
+  var IDLE_MS = 15 * 60 * 1000, timer;
+  function out() { try { window.ADMIN && window.ADMIN.logout(); } catch (e) { location.href = 'login.html?timeout=1'; } }
+  function reset() { clearTimeout(timer); timer = setTimeout(out, IDLE_MS); }
+  ['mousemove', 'keydown', 'click', 'scroll', 'touchstart'].forEach(function (ev) {
+    document.addEventListener(ev, reset, { passive: true });
+  });
+  reset();
+})();

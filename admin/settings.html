@@ -1,0 +1,64 @@
+<!DOCTYPE html><html lang="en"><head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Settings — [Company] Security Admin</title><meta name="robots" content="noindex">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap">
+<link rel="stylesheet" href="../assets/css/style.css"><link rel="stylesheet" href="../assets/css/components.css"><link rel="stylesheet" href="assets/admin.css">
+<script>(function(){try{var o=sessionStorage.getItem("theme-override");var h=new Date().getHours();document.documentElement.setAttribute("data-theme",o||((h>=7&&h<19)?"light":"dark"));}catch(e){document.documentElement.setAttribute("data-theme","dark");}})();</script>
+<style>
+.cms-card{padding:24px;margin-bottom:22px;max-width:560px}
+.cms-card input{width:100%;font-family:inherit;font-size:.92rem;color:var(--ink);padding:10px 12px;border-radius:9px;background:var(--bg-2);border:1px solid var(--glass-stroke)}
+.cms-card input:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 3px rgba(10,132,255,.18)}
+.cms-lbl{font-size:.72rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-4);margin:12px 0 4px}
+.note{font-size:.82rem;color:var(--ink-4);margin-top:8px}
+</style>
+</head><body>
+<div class="bg-orbs" aria-hidden="true"><span></span><span></span><span></span></div>
+<div class="admin-shell">
+  <aside class="admin-side">
+    <a class="brand" href="dashboard.html"><span class="mark"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></span><span>[Company]<small>Admin</small></span></a>
+    <nav class="admin-nav">
+      <a href="dashboard.html">📊 Dashboard</a>
+      <a href="enquiries.html">📨 Enquiries</a>
+      <a href="content.html">📝 Content</a>
+      <a href="admins.html" id="navAdmins">👥 Admins</a>
+      <a href="settings.html" class="active">⚙ Settings</a>
+      <a href="../index.html">🌐 View Site</a>
+      <a href="#" id="logoutBtn">⎋ Sign Out</a>
+    </nav>
+  </aside>
+  <main class="admin-main">
+    <div class="admin-top"><div><h1 style="font-size:1.6rem;margin:0">My Settings</h1><p style="color:var(--ink-3);margin:0" id="who">Manage your own account</p></div></div>
+
+    <section class="glass cms-card">
+      <h3 style="margin:0 0 6px">Account</h3>
+      <p class="note" style="margin-top:0">Change your sign-in email (username) and/or password. Your current password is required to confirm.</p>
+      <div class="cms-lbl">Email (username)</div><input id="email" type="email" placeholder="you@email.com">
+      <div class="cms-lbl">New password (leave blank to keep)</div><input id="password" type="password" autocomplete="new-password" placeholder="••••••••">
+      <div class="cms-lbl">Confirm current password <span style="color:var(--red,#ff5b50)">*</span></div><input id="current" type="password" autocomplete="current-password" placeholder="Your current password">
+      <div class="form-status" id="status" role="status" aria-live="polite" style="margin-top:12px"></div>
+      <button class="btn btn-primary" id="saveBtn" style="margin-top:14px">Save changes</button>
+    </section>
+  </main>
+</div>
+<script src="assets/admin.js"></script>
+<script>
+var CSRF=null; ADMIN.csrf().then(function(t){CSRF=t;});
+document.getElementById('logoutBtn').addEventListener('click',function(e){e.preventDefault();ADMIN.logout();});
+function g(id){return document.getElementById(id);}
+ADMIN.guard().then(function(a){
+  if(a){ g('email').value=a.email||''; g('who').textContent='Signed in as '+a.email+(a.role==='super'?' · Super admin':''); 
+    if(a.role!=='super'){ var n=g('navAdmins'); if(n) n.style.display='none'; } }
+});
+g('saveBtn').addEventListener('click',function(){
+  var st=g('status'); st.className='form-status';
+  var payload={ current_password:g('current').value, email:g('email').value.trim() };
+  if(g('password').value) payload.password=g('password').value;
+  ADMIN.req('/me',{method:'PATCH',headers:{'X-CSRF-Token':CSRF},body:JSON.stringify(payload)})
+   .then(function(r){
+     if(r.ok&&r.body.success){ st.className='form-status show ok'; st.textContent='Saved ✓'; g('password').value=''; g('current').value=''; }
+     else { st.className='form-status show bad'; st.textContent=(r.body&&r.body.message)||'Could not save.'; }
+   }).catch(function(){ st.className='form-status show bad'; st.textContent='Network error.'; });
+});
+</script>
+<script src="../assets/js/theme.js" defer></script>
+</body></html>

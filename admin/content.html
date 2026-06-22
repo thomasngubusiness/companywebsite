@@ -29,6 +29,7 @@
       <a href="enquiries.html">📨 Enquiries</a>
       <a href="content.html" class="active">📝 Content</a>
       <a href="admins.html">👥 Admins</a>
+      <a href="settings.html">⚙ Settings</a>
       <a href="../index.html">🌐 View Site</a>
       <a href="#" id="logoutBtn">⎋ Sign Out</a>
     </nav>
@@ -141,6 +142,13 @@ function build(){
     {label:'Careers — Open Positions', make:function(){return listEditor({key:'careers',title:'Careers — Open Positions',wrap:'positions',
       fields:[{k:'title',label:'Position'},{k:'type',label:'Type (Remote / Hybrid / Shift)'},{k:'desc',label:'Description',ta:true}],
       items:(CONTENT.careers&&CONTENT.careers.positions)||(SITE_DEFAULTS.careers&&SITE_DEFAULTS.careers.positions)||[]});}},
+    {label:'Services', make:function(){return listEditor({key:'services',title:'Services (services page)',
+      fields:[{k:'tag',label:'Tag (e.g. Offensive Security)'},{k:'title',label:'Service title'},{k:'intro',label:'Intro line',ta:true},
+        {k:'col1_title',label:'Column 1 heading'},{k:'col1',label:'Column 1 items (one per line)',ta:true},
+        {k:'col2_title',label:'Column 2 heading'},{k:'col2',label:'Column 2 items (one per line)',ta:true},
+        {k:'col3_title',label:'Column 3 heading'},{k:'col3',label:'Column 3 items (one per line)',ta:true},
+        {k:'benefits',label:'Benefits line',ta:true}],
+      items:CONTENT.services||SITE_DEFAULTS.services||[]});}},
     {label:'Partners', make:function(){return partnersEditor(CONTENT.partners||SITE_DEFAULTS.partners);}},
     {label:'Contact', make:function(){return contactEditor(CONTENT.contact||SITE_DEFAULTS.contact);}}
   ];

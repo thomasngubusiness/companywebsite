@@ -12,11 +12,15 @@
 .adm-row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 14px;border:1px solid var(--glass-stroke);border-radius:12px;margin-bottom:10px;background:var(--glass-3);flex-wrap:wrap}
 .adm-row .em{font-weight:600}
 .adm-row .meta{color:var(--ink-4);font-size:.82rem}
-.adm-actions{display:flex;gap:8px}
+.role-pill{font-size:.68rem;font-weight:700;text-transform:uppercase;padding:2px 8px;border-radius:999px;margin-left:8px}
+.role-super{background:rgba(191,90,242,.16);color:#c98bff}
+.role-admin{background:rgba(10,132,255,.16);color:#6bb4ff}
+.adm-actions{display:flex;gap:8px;flex-wrap:wrap}
 .x{border:1px solid var(--glass-stroke);background:var(--glass-3);color:var(--ink-3);border-radius:8px;padding:5px 11px;font-size:.8rem;font-weight:600;cursor:pointer}
-.x:hover{color:#fff}
+.x:hover{color:var(--ink)}
 .x.del:hover{border-color:rgba(255,69,58,.45);color:#ff5b50;background:rgba(255,69,58,.08)}
 .note{font-size:.82rem;color:var(--ink-4);margin-top:8px}
+.banner{padding:12px 16px;border-radius:12px;background:rgba(255,159,10,.12);border:1px solid rgba(255,159,10,.35);color:var(--ink-2);font-size:.9rem;margin-bottom:18px}
 </style>
 </head><body>
 <div class="bg-orbs" aria-hidden="true"><span></span><span></span><span></span></div>
@@ -28,14 +32,16 @@
       <a href="enquiries.html">📨 Enquiries</a>
       <a href="content.html">📝 Content</a>
       <a href="admins.html" class="active">👥 Admins</a>
+      <a href="settings.html">⚙ Settings</a>
       <a href="../index.html">🌐 View Site</a>
       <a href="#" id="logoutBtn">⎋ Sign Out</a>
     </nav>
   </aside>
   <main class="admin-main">
     <div class="admin-top"><div><h1 style="font-size:1.6rem;margin:0">Admin Users</h1><p style="color:var(--ink-3);margin:0">Add or remove people who can sign in to this dashboard.</p></div></div>
+    <div class="banner" id="notSuper" style="display:none">You are a standard admin — you can view the list but only a <strong>super admin</strong> can add, remove or reset other admins. Use <a href="settings.html">Settings</a> to change your own account.</div>
 
-    <section class="glass cms-card">
+    <section class="glass cms-card" id="addCard">
       <h3 style="margin:0 0 14px">Add a new admin</h3>
       <div class="form-grid">
         <div class="field"><div class="cms-lbl">Email</div><input id="newEmail" type="email" placeholder="person@email.com"></div>
@@ -43,7 +49,6 @@
       </div>
       <div class="form-status" id="addStatus" role="status" aria-live="polite" style="margin-top:10px"></div>
       <button class="btn btn-primary" id="addBtn" style="margin-top:14px">+ Add admin</button>
-      <div class="note">Tip: share the password securely; the new admin can change it later by being re-added with a new password.</div>
     </section>
 
     <section class="glass cms-card">
@@ -54,32 +59,57 @@
 </div>
 <script src="assets/admin.js"></script>
 <script>
-ADMIN.guard();
+var CSRF=null, ME=null;
+ADMIN.csrf().then(function(t){CSRF=t;});
 document.getElementById('logoutBtn').addEventListener('click',function(e){e.preventDefault();ADMIN.logout();});
-var CSRF=null; ADMIN.csrf().then(function(t){CSRF=t;});
 function g(id){return document.getElementById(id);}
 function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
+var isSuper=false;
+
+ADMIN.guard().then(function(a){
+  ME=a; isSuper = a && a.role==='super';
+  if(!isSuper){ g('addCard').style.display='none'; g('notSuper').style.display='block'; }
+  load();
+});
 
 function load(){
   ADMIN.req('/admins').then(function(r){
     if(!r.ok)return;
     var list=r.body.admins||[];
     g('list').innerHTML=list.map(function(a){
-      return '<div class="adm-row" data-id="'+a.id+'"><div><div class="em">'+esc(a.email)+'</div>'+
-        '<div class="meta">Added '+esc((a.created_at||'').slice(0,10))+'</div></div>'+
-        '<div class="adm-actions"><button class="x del" data-del>Delete</button></div></div>';
+      var role='<span class="role-pill '+(a.role==='super'?'role-super':'role-admin')+'">'+esc(a.role||'admin')+'</span>';
+      var actions='';
+      if(isSuper){
+        actions='<button class="x" data-pw>Reset password</button>'+
+                (a.id===(ME&&ME.id)?'':'<button class="x del" data-del>Delete</button>');
+      }
+      return '<div class="adm-row" data-id="'+a.id+'" data-email="'+esc(a.email)+'"><div><div class="em">'+esc(a.email)+role+'</div>'+
+        '<div class="meta">Added '+esc((a.created_at||'').slice(0,10))+(a.id===(ME&&ME.id)?' · you':'')+'</div></div>'+
+        '<div class="adm-actions">'+actions+'</div></div>';
     }).join('')|| '<p style="color:var(--ink-4)">No admins.</p>';
+
     g('list').querySelectorAll('[data-del]').forEach(function(b){
       b.addEventListener('click',function(){
         var row=b.closest('.adm-row'), id=row.getAttribute('data-id');
-        if(!confirm('Delete this admin? They will no longer be able to sign in.'))return;
+        if(!confirm('Delete '+row.getAttribute('data-email')+'? They will no longer be able to sign in.'))return;
         ADMIN.req('/admins/'+id,{method:'DELETE',headers:{'X-CSRF-Token':CSRF}}).then(function(r){
           if(r.ok&&r.body.success){load();} else {alert((r.body&&r.body.message)||'Delete failed');}
         });
       });
     });
+    g('list').querySelectorAll('[data-pw]').forEach(function(b){
+      b.addEventListener('click',function(){
+        var row=b.closest('.adm-row'), id=row.getAttribute('data-id');
+        var np=prompt('New password for '+row.getAttribute('data-email')+' (min 8 chars):');
+        if(np===null)return;
+        if(np.length<8){alert('Password must be at least 8 characters.');return;}
+        ADMIN.req('/admins/'+id+'/password',{method:'PATCH',headers:{'X-CSRF-Token':CSRF},body:JSON.stringify({password:np})})
+         .then(function(r){ alert(r.ok&&r.body.success?'Password updated.':((r.body&&r.body.message)||'Failed')); });
+      });
+    });
   });
 }
+
 g('addBtn').addEventListener('click',function(){
   var st=g('addStatus'), email=g('newEmail').value.trim(), pass=g('newPass').value;
   st.className='form-status';
@@ -89,7 +119,6 @@ g('addBtn').addEventListener('click',function(){
      else{st.className='form-status show bad';st.textContent=(r.body&&r.body.message)||'Could not add admin.';}
    }).catch(function(){st.className='form-status show bad';st.textContent='Network error.';});
 });
-load();
 </script>
 <script src="../assets/js/theme.js" defer></script>
 </body></html>

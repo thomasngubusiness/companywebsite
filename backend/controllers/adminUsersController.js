@@ -5,7 +5,7 @@ const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 
 async function list(_req, res) {
   try {
-    const { rows } = await query('SELECT id, email, created_at FROM admins ORDER BY created_at ASC');
+    const { rows } = await query('SELECT id, email, role, created_at FROM admins ORDER BY created_at ASC');
     res.json({ success: true, admins: rows });
   } catch (e) {
     console.error('[admins.list]', e.message);

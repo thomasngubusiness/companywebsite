@@ -8,7 +8,7 @@ module.exports = {
   corsOrigins: (process.env.CORS_ORIGIN || 'http://localhost:5500')
     .split(',').map(s => s.trim()).filter(Boolean),
   jwtSecret: process.env.JWT_SECRET || 'dev_insecure_secret_change_me',
-  jwtExpires: process.env.JWT_EXPIRES || '8h',
+  jwtExpires: process.env.JWT_EXPIRES || '15m',
   admin: { email: process.env.ADMIN_EMAIL, password: process.env.ADMIN_PASSWORD },
   databaseUrl: process.env.DATABASE_URL || '',
   dbPath: process.env.DB_PATH || path.join(__dirname, '..', 'database', 'enquiries.db'),

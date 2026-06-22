@@ -27,11 +27,19 @@ CREATE TABLE IF NOT EXISTS admins (
   id            SERIAL PRIMARY KEY,
   email         TEXT UNIQUE NOT NULL,
   password_hash TEXT NOT NULL,
+  role          TEXT NOT NULL DEFAULT 'admin',
   created_at    TIMESTAMPTZ NOT NULL DEFAULT now()
 );
+ALTER TABLE admins ADD COLUMN IF NOT EXISTS role TEXT NOT NULL DEFAULT 'admin';
 
 CREATE TABLE IF NOT EXISTS site_content (
   key        TEXT PRIMARY KEY,
   data       JSONB NOT NULL DEFAULT '{}'::jsonb,
   updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE TABLE IF NOT EXISTS password_resets (
+  token      TEXT PRIMARY KEY,
+  admin_id   INTEGER NOT NULL REFERENCES admins(id) ON DELETE CASCADE,
+  expires_at TIMESTAMPTZ NOT NULL
 );

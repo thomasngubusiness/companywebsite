@@ -46,4 +46,18 @@ async function sendEnquiryEmails(enquiry) {
   });
   return true;
 }
-module.exports = { sendEnquiryEmails };
+async function sendResetEmail(to, link) {
+  const t = getTransport();
+  if (!t) { console.warn('[mailer] SMTP not configured — cannot send reset email'); return false; }
+  await t.sendMail({
+    from: config.mail.from, to,
+    subject: 'Reset your [Company] Security admin password',
+    html: `<h2>Password reset</h2>
+           <p>We received a request to reset your admin password. Click the link below within 30 minutes:</p>
+           <p><a href="${esc(link)}">${esc(link)}</a></p>
+           <p>If you did not request this, you can safely ignore this email.</p>`,
+  });
+  return true;
+}
+
+module.exports = { sendEnquiryEmails, sendResetEmail };

@@ -1,0 +1,48 @@
+<!DOCTYPE html><html lang="en"><head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Reset Password — [Company] Security</title><meta name="robots" content="noindex">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap">
+<link rel="stylesheet" href="../assets/css/style.css"><link rel="stylesheet" href="../assets/css/components.css"><link rel="stylesheet" href="assets/admin.css">
+<script>(function(){try{var o=sessionStorage.getItem("theme-override");var h=new Date().getHours();document.documentElement.setAttribute("data-theme",o||((h>=7&&h<19)?"light":"dark"));}catch(e){document.documentElement.setAttribute("data-theme","dark");}})();</script>
+</head><body>
+<div class="bg-orbs" aria-hidden="true"><span></span><span></span><span></span></div>
+<div class="login-wrap">
+  <div class="glass login-card">
+    <a class="brand" href="../index.html" style="margin-bottom:18px"><span class="mark"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M9 12l2 2 4-4"/></svg></span><span>[Company]<small>Security</small></span></a>
+    <h2 style="font-size:1.5rem">Set a new password</h2>
+    <p style="color:var(--ink-3);font-size:.92rem;margin-bottom:18px">Choose a strong password (at least 8 characters).</p>
+    <form id="resetForm" novalidate onsubmit="return false">
+      <div class="field" style="margin-bottom:14px"><label>New password</label><input type="password" name="password" autocomplete="new-password" required placeholder="••••••••"><span class="err"></span></div>
+      <div class="field" style="margin-bottom:14px"><label>Confirm password</label><input type="password" name="confirm" autocomplete="new-password" required placeholder="••••••••"><span class="err"></span></div>
+      <div class="form-status" role="status" aria-live="polite"></div>
+      <button id="resetBtn" class="btn btn-primary btn-block btn-lg" type="button" style="margin-top:8px">Update password</button>
+    </form>
+    <p style="margin-top:14px;text-align:center;font-size:.9rem"><a href="login.html">← Back to sign in</a></p>
+  </div>
+</div>
+<script>
+(function () {
+  'use strict';
+  var API = (window.SITE_CONFIG && window.SITE_CONFIG.apiBase || '/api') + '/admin';
+  var token = new URLSearchParams(location.search).get('token') || '';
+  var form = document.getElementById('resetForm'), btn = document.getElementById('resetBtn'), st = form.querySelector('.form-status');
+  if (!token) { st.className='form-status show bad'; st.textContent='Missing reset token. Use the link from your email.'; btn.disabled = true; }
+  function submit() {
+    var p = form.password.value, c = form.confirm.value;
+    if (p.length < 8) { st.className='form-status show bad'; st.textContent='Password must be at least 8 characters.'; return; }
+    if (p !== c) { st.className='form-status show bad'; st.textContent='Passwords do not match.'; return; }
+    btn.disabled = true; var old = btn.innerHTML; btn.innerHTML = '<span class="spinner"></span> Updating…';
+    fetch(API + '/reset', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ token: token, password: p }) })
+      .then(function (r){ return r.json().catch(function(){return{};}).then(function(j){return{ok:r.ok,j:j};}); })
+      .then(function (res) {
+        if (res.ok && res.j && res.j.success) { st.className='form-status show ok'; st.textContent='Password updated. Redirecting to sign in…'; setTimeout(function(){location.href='login.html';},1500); }
+        else { btn.disabled=false; btn.innerHTML=old; st.className='form-status show bad'; st.textContent=(res.j&&res.j.message)||'Could not reset password.'; }
+      })
+      .catch(function () { btn.disabled=false; btn.innerHTML=old; st.className='form-status show bad'; st.textContent='Could not reach the server.'; });
+  }
+  btn.addEventListener('click', submit);
+  form.addEventListener('keydown', function(e){ if(e.key==='Enter'){e.preventDefault();submit();} });
+})();
+</script>
+<script src="../assets/js/theme.js" defer></script>
+</body></html>

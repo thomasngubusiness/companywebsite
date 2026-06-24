@@ -60,3 +60,25 @@ window.ADMIN = (function () {
   });
   reset();
 })();
+
+/* Mobile sidebar: inject a hamburger button that toggles the nav dropdown.
+   Runs on every admin page (shared script); no-op on desktop via CSS. */
+(function () {
+  function init() {
+    var side = document.querySelector('.admin-side');
+    if (!side || side.querySelector('.admin-menu-btn')) return;
+    var btn = document.createElement('button');
+    btn.className = 'admin-menu-btn';
+    btn.type = 'button';
+    btn.setAttribute('aria-label', 'Toggle menu');
+    btn.innerHTML = '<span></span><span></span><span></span>';
+    btn.addEventListener('click', function () { side.classList.toggle('open'); });
+    side.appendChild(btn);
+    // Close the dropdown after tapping a destination.
+    side.querySelectorAll('.admin-nav a').forEach(function (a) {
+      a.addEventListener('click', function () { side.classList.remove('open'); });
+    });
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
+  else init();
+})();

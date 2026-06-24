@@ -123,6 +123,25 @@ function contactEditor(c){
   return card;
 }
 
+function objectEditor(opts){
+  // opts: {key, title, fields:[{k,label,ta}], values:{}}
+  var v=opts.values||{};
+  var card=el('<section class="glass cms-card"></section>');
+  card.appendChild(el('<div class="hd"><h3 style="margin:0">'+esc(opts.title)+'</h3><button class="btn btn-primary" data-save>Save</button></div>'));
+  var wrap=el('<div></div>');
+  opts.fields.forEach(function(f){
+    wrap.appendChild(el('<div class="cms-lbl">'+esc(f.label)+'</div>'));
+    wrap.appendChild(el(f.ta?('<textarea data-f="'+f.k+'" rows="3">'+esc(v[f.k]||'')+'</textarea>'):('<input data-f="'+f.k+'" value="'+esc(v[f.k]||'')+'">')));
+  });
+  card.appendChild(wrap);
+  var note=el('<div class="save-note"></div>'); card.appendChild(note);
+  card.querySelector('[data-save]').addEventListener('click',function(){
+    var o={}; wrap.querySelectorAll('[data-f]').forEach(function(i){o[i.getAttribute('data-f')]=i.value;});
+    save(opts.key,o,note);
+  });
+  return card;
+}
+
 function save(key,data,note){
   note.textContent='Saving…';
   ADMIN.req('/content/'+key,{method:'PUT',headers:{'X-CSRF-Token':CSRF},body:JSON.stringify({data:data})})
@@ -135,6 +154,19 @@ function build(){
   var box=g('editors'); box.innerHTML=''; CARDS=[];
   var sel=g('secSel'); sel.innerHTML='';
   var sections=[
+    {label:'Homepage — Hero & Intro', make:function(){return objectEditor({key:'homepage',title:'Homepage — hero & intro (front page)',
+      fields:[
+        {k:'hero_badge',label:'Hero badge (top chip)'},
+        {k:'hero_title',label:'Hero headline — normal part'},
+        {k:'hero_highlight',label:'Hero headline — highlighted part'},
+        {k:'hero_lede',label:'Hero subtext',ta:true},
+        {k:'cta1_text',label:'Primary button text'},
+        {k:'cta2_text',label:'Secondary button text'},
+        {k:'about_eyebrow',label:'"Who we are" eyebrow'},
+        {k:'about_title',label:'About heading'},
+        {k:'about_text',label:'About paragraph',ta:true}
+      ],
+      values:CONTENT.homepage||SITE_DEFAULTS.homepage||{}});}},
     {label:'About — Leadership Team', make:function(){return listEditor({key:'about_team',title:'About — Leadership Team',
       fields:[{k:'name',label:'Name'},{k:'role',label:'Role'},{k:'bio',label:'Short bio',ta:true}],
       items:CONTENT.about_team||SITE_DEFAULTS.about_team||[]});}},

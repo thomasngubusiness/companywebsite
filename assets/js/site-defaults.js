@@ -2,6 +2,17 @@
    edit what's already on the pages. Once you Save a section, the database
    version takes over and these defaults are no longer used for it. */
 window.SITE_DEFAULTS = {
+  homepage: {
+    hero_badge: "Trusted by 100+ enterprises",
+    hero_title: "Cybersecurity That",
+    hero_highlight: "Protects What Matters Most",
+    hero_lede: "Helping organizations identify, assess, and mitigate cyber risks through offensive security testing and cloud security expertise.",
+    cta1_text: "Request Consultation",
+    cta2_text: "View Services",
+    about_eyebrow: "Who we are",
+    about_title: "A security partner that thinks like an attacker, reports like a consultant.",
+    about_text: "We combine offensive security depth with enterprise rigor. Our consultants have secured banks, hospitals, governments, and high-growth technology companies — and every engagement ends with clear, prioritized, business-aware remediation."
+  },
   services: [
     { tag:"Offensive Security", title:"Vulnerability Assessment & Penetration Testing", intro:"Depth-first, manual testing that emulates real adversaries across every layer of your environment.",
       col1_title:"Engagements", col1:"Web Application Testing\nMobile Application Testing\nAPI Security Testing\nExternal Penetration Testing\nInternal Penetration Testing\nWireless Security Testing\nRed Team Assessments",

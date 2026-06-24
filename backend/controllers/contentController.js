@@ -2,7 +2,7 @@
 const { query } = require('../database/db');
 
 // Sections the admin may edit. Anything else is rejected.
-const KEYS = ['about_team', 'insights', 'careers', 'partners', 'contact', 'services'];
+const KEYS = ['about_team', 'insights', 'careers', 'partners', 'contact', 'services', 'homepage'];
 
 async function getAll(_req, res) {
   try {

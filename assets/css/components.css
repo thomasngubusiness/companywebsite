@@ -9,7 +9,9 @@
   display:flex;align-items:center;justify-content:space-between;gap:18px}
 .nav.scrolled{background:var(--nav-bg);backdrop-filter:blur(22px) saturate(160%);
   -webkit-backdrop-filter:blur(22px) saturate(160%);box-shadow:0 1px 0 var(--hairline)}
-.brand{display:flex;align-items:center;gap:11px;font-weight:700;font-size:1.05rem;color:var(--ink);letter-spacing:-.01em}
+.brand{display:flex;align-items:center;gap:11px;font-weight:700;font-size:1.05rem;color:var(--ink);letter-spacing:-.01em;text-decoration:none;cursor:pointer;transition:opacity .2s ease,transform .2s ease}
+a.brand:hover{opacity:.82}
+a.brand:active{transform:scale(.98)}
 .brand .mark{width:34px;height:34px;display:grid;place-items:center;border-radius:10px;
   background:var(--grad-brand);box-shadow:var(--glow-blue);font-weight:800;font-size:.82rem;color:#fff;
   clip-path:polygon(25% 0,75% 0,100% 50%,75% 100%,25% 100%,0 50%)}

@@ -110,9 +110,18 @@
     });
   }
 
-  if (!document.querySelector('[data-cms]')) return;
+  function applyHome(content) {
+    var hp = content && content.homepage;
+    if (!hp) return;
+    document.querySelectorAll('[data-cms-home]').forEach(function (elx) {
+      var f = elx.getAttribute('data-cms-home');
+      if (hp[f] != null && String(hp[f]).trim() !== '') elx.textContent = hp[f];
+    });
+  }
+
+  if (!document.querySelector('[data-cms],[data-cms-home]')) return;
   fetch(API + '/content')
     .then(function (r) { return r.json(); })
-    .then(function (d) { if (d && d.success && d.content) apply(d.content); })
+    .then(function (d) { if (d && d.success && d.content) { apply(d.content); applyHome(d.content); } })
     .catch(function () { /* offline / no backend → keep fallback content */ });
 })();

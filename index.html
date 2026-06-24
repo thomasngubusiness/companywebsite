@@ -172,14 +172,21 @@
       <h2 id="tm-h">Do you know how many cyberattacks happen <span class="gradient-text">every day?</span></h2>
       <p class="lede" style="margin:0 auto">An estimated <strong>2,200+</strong> cyberattacks are launched worldwide every single day — roughly one every 39 seconds. Here's an illustrative look at the kind of relentless activity defenders face around the clock.</p>
     </div>
-    <div class="threatmap-wrap" data-reveal>
-      <canvas id="threatCanvas" role="img" aria-label="Animated world map illustrating global cyberattack activity"></canvas>
-      <p class="tm-note">Illustrative visualization — industry estimates, not a live feed.</p>
+    <div class="tm-panel" data-reveal>
+      <div class="tm-top">
+        <span class="tm-live"><span class="d"></span> Live threat activity</span>
+        <div class="tm-legend" id="tmLegend"></div>
+      </div>
+      <div class="tm-body">
+        <div class="tm-mapwrap"><canvas id="threatCanvas" role="img" aria-label="Animated world map of global cyberattack activity"></canvas></div>
+        <aside class="tm-feed"><h4>Live attack feed</h4><ul id="tmFeed"></ul></aside>
+      </div>
       <div class="tm-stats">
         <div class="tm-stat"><div class="tm-num" id="tmToday">0</div><div class="tm-lbl">Attacks today (est.)</div></div>
         <div class="tm-stat"><div class="tm-num">~1 / 39s</div><div class="tm-lbl">Global attack rate</div></div>
         <div class="tm-stat"><div class="tm-num" id="tmLive">0</div><div class="tm-lbl">Threat events shown</div></div>
       </div>
+      <p class="tm-note">Illustrative real-time simulation based on industry estimates — not a live data feed.</p>
     </div>
     <div style="text-align:center;margin-top:22px"><a class="btn btn-primary btn-lg" href="enquiry.html">Get ahead of the threats — request an assessment</a></div>
   </div>

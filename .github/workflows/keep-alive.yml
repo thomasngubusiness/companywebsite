@@ -1,0 +1,26 @@
+name: Keep Render service awake
+
+# Pings the health endpoint every ~14 minutes so the Render free web service
+# doesn't spin down after 15 minutes of inactivity.
+# Note: GitHub may delay scheduled runs under load, and disables schedules
+# after 60 days of no repo activity — push occasionally to keep it alive.
+
+on:
+  schedule:
+    - cron: "*/14 * * * *"   # every 14 minutes (UTC)
+  workflow_dispatch:          # allow manual runs from the Actions tab
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping health endpoint
+        run: |
+          URL="https://companywebsite-0o9u.onrender.com/api/health"
+          echo "Pinging $URL"
+          code=$(curl -s -o /dev/null -w "%{http_code}" --max-time 60 --retry 2 "$URL")
+          echo "HTTP $code"
+          # Treat any response (even a cold-start delay) as success; only fail on no response.
+          if [ "$code" = "000" ]; then
+            echo "No response from server"; exit 1
+          fi

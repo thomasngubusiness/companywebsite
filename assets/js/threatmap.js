@@ -62,10 +62,14 @@
     return '<span><i style="background:' + t.c + '"></i>' + t.n + '</span>';
   }).join('');
 
-  var W = 0, H = 0, DPR = Math.min(window.devicePixelRatio || 1, 2), dots = [];
+  var W = 0, H = 0, DOT = 1.3, DPR = Math.min(window.devicePixelRatio || 1, 2), dots = [];
   function resize() {
     var rect = wrap.getBoundingClientRect();
-    W = Math.max(280, rect.width); H = W / 2;
+    W = Math.max(280, rect.width);
+    // Taller aspect on phones so the map fills the panel instead of looking tiny.
+    var ratio = W < 600 ? 1.5 : 2.0;
+    DOT = W < 600 ? 1.8 : 1.3;
+    H = W / ratio;
     canvas.width = W * DPR; canvas.height = H * DPR;
     canvas.style.height = H + 'px';
     ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
@@ -78,7 +82,7 @@
 
   function drawMap() {
     ctx.fillStyle = 'rgba(120,150,190,0.26)';
-    for (var i = 0; i < dots.length; i++) ctx.fillRect(dots[i][0], dots[i][1], 1.3, 1.3);
+    for (var i = 0; i < dots.length; i++) ctx.fillRect(dots[i][0], dots[i][1], DOT, DOT);
   }
 
   var arcs = [], ripples = [], session = 0, feed = [];

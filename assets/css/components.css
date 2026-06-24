@@ -256,4 +256,5 @@ textarea:focus-visible,summary:focus-visible,[tabindex]:focus-visible{
   .tm-body{grid-template-columns:1fr}
   .tm-feed{border-left:0;border-top:1px solid rgba(255,255,255,.08);max-height:172px;overflow-y:auto}
 }
+@media(max-width:600px){#threatCanvas{aspect-ratio:3/2}}
 @media(max-width:560px){.tm-num{font-size:1.05rem}.tm-stat{min-width:96px;padding:8px 11px;flex:1 1 40%}}

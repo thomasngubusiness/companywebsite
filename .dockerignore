@@ -1,0 +1,11 @@
+**/node_modules
+.git
+.github
+*.log
+npm-debug.log*
+.env
+.env.*
+enq_uploads
+*.md
+.DS_Store
+Thumbs.db

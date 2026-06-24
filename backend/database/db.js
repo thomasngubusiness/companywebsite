@@ -9,9 +9,15 @@ if (!config.databaseUrl) {
   console.warn('[db] DATABASE_URL is not set — the app needs a PostgreSQL connection string.');
 }
 
-// Render's INTERNAL database URL (no domain) needs no SSL; the EXTERNAL URL
-// (*.render.com) requires SSL. Auto-detect so both work.
-const needsSSL = /\.render\.com/i.test(config.databaseUrl) || process.env.PGSSL === 'true';
+// Managed Postgres (Neon, Render external, Supabase, Aiven, etc.) requires SSL;
+// local development does not. Enable SSL for any remote host, disable for
+// localhost. Override either way with PGSSL=true / PGSSL=false.
+const _dbUrl = config.databaseUrl || '';
+const _isLocal = /(@|\/\/)(localhost|127\.0\.0\.1|\[?::1\]?)/i.test(_dbUrl);
+const needsSSL =
+  process.env.PGSSL === 'true' ||
+  /sslmode=require/i.test(_dbUrl) ||
+  (process.env.PGSSL !== 'false' && !!_dbUrl && !_isLocal);
 
 const pool = new Pool({
   connectionString: config.databaseUrl,

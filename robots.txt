@@ -1,5 +1,18 @@
+# robots.txt — [Company] Security
 User-agent: *
 Allow: /
+
+# Block private / non-content areas
 Disallow: /admin/
+Disallow: /api/
 Disallow: /backend/
-Sitemap: https://www.example.com/sitemap.xml
+Disallow: /*.json$
+
+# Be explicit for major crawlers (no restrictive crawl-delay)
+User-agent: Googlebot
+Allow: /
+
+User-agent: Bingbot
+Allow: /
+
+Sitemap: https://companywebsite-0o9u.onrender.com/sitemap.xml

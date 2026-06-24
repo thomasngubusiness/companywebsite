@@ -258,3 +258,9 @@ textarea:focus-visible,summary:focus-visible,[tabindex]:focus-visible{
 }
 @media(max-width:600px){#threatCanvas{aspect-ratio:3/2}}
 @media(max-width:560px){.tm-num{font-size:1.05rem}.tm-stat{min-width:96px;padding:8px 11px;flex:1 1 40%}}
+
+/* Threat-map CTA: wrap + full width on phones so it doesn't overflow */
+@media(max-width:560px){
+  .tm-cta{white-space:normal;width:100%;justify-content:center;text-align:center;
+    padding:14px 18px;line-height:1.3}
+}

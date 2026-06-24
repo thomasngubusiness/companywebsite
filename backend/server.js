@@ -5,7 +5,7 @@ const cors = require('cors');
 const cookieParser = require('cookie-parser');
 const path = require('path');
 const config = require('./config');
-const { init, ensureAdmin } = require('./database/db');
+const { init, ensureAdmin, query } = require('./database/db');
 const logger = require('./middleware/logger');
 
 // schema is initialised before the server starts listening (see bottom)
@@ -52,7 +52,28 @@ app.use(logger);
 app.use('/api', require('./routes/enquiries'));
 app.use('/api/admin', require('./routes/admin'));
 app.get('/api/content', require('./controllers/contentController').getAll);
-app.get('/api/health', (_req, res) => res.json({ success: true, status: 'ok', time: new Date().toISOString() }));
+// Health check. By default it also pings the database so an unreachable Neon
+// (or any DB outage) makes the endpoint return 503 — letting Koyeb mark the
+// instance unhealthy and fail fast. The DB result is cached for 30s so frequent
+// platform pings don't hammer the database. Set HEALTH_DB_CHECK=false to make it
+// a plain liveness probe (lets Neon autosuspend when idle).
+const _HEALTH_DB = process.env.HEALTH_DB_CHECK !== 'false';
+let _dbHealth = { ts: 0, ok: true };
+app.get('/api/health', async (_req, res) => {
+  const now = Date.now();
+  if (_HEALTH_DB) {
+    if (now - _dbHealth.ts > 30000) {
+      try { await query('SELECT 1'); _dbHealth = { ts: now, ok: true }; }
+      catch (e) { _dbHealth = { ts: now, ok: false, err: e.message }; }
+    }
+    if (!_dbHealth.ok) {
+      return res.status(503).json({ success: false, status: 'degraded', db: 'down',
+        time: new Date().toISOString() });
+    }
+    return res.json({ success: true, status: 'ok', db: 'ok', time: new Date().toISOString() });
+  }
+  return res.json({ success: true, status: 'ok', time: new Date().toISOString() });
+});
 
 // ── Serve the static website + admin (single-deployment convenience) ──
 const ROOT = path.join(__dirname, '..');

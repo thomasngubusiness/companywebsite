@@ -58,7 +58,11 @@ only need **one** Koyeb service. The database is the only external piece.
 4. **Build command:** `npm install` (default). **Run command:** `npm start` (default).
 5. **Instance:** select the **Free** ("nano") instance. **Regions:** pick the same region as Neon.
 6. **Exposed port:** set to **`8080`** (Koyeb injects `PORT=8080`; the app reads it).
-7. **Health check:** type **HTTP**, path **`/api/health`** (the app returns `{"success":true}`).
+7. **Health check:** type **HTTP**, path **`/api/health`**. This endpoint also **pings the
+   database**, returning `200 {"success":true,"db":"ok"}` when Neon is reachable and
+   `503 {"status":"degraded","db":"down"}` when it isn't — so Koyeb fails fast and restarts a
+   broken instance. (The DB result is cached 30s so platform pings don't hammer Neon. To make
+   it a plain liveness probe and let Neon autosuspend when idle, set `HEALTH_DB_CHECK=false`.)
 8. Add the **environment variables** below.
 9. Click **Deploy**. First build takes ~1–3 minutes. When healthy, Koyeb gives you a URL like
    `https://companywebsite-xxxx.koyeb.app`.
@@ -98,6 +102,7 @@ Either builder works; the Dockerfile just pins Node 20 and the exact build steps
 | `RECAPTCHA_SITE_KEY`, `RECAPTCHA_SECRET` | Google reCAPTCHA v2 **Checkbox** keys (login + adaptive form captcha) |
 | `SMTP_HOST`, `SMTP_PORT`, `SMTP_SECURE`, `SMTP_USER`, `SMTP_PASS` | forgot‑password + enquiry notification emails |
 | `MAIL_FROM`, `MAIL_ADMIN` | "from" address and where enquiry alerts go |
+| `HEALTH_DB_CHECK` | `false` to make `/api/health` a plain liveness probe (default: also checks the DB) |
 
 > Don't set `PORT` manually — Koyeb provides it. Don't set `PGSSL` — SSL is auto‑enabled for Neon.
 
@@ -108,7 +113,7 @@ Either builder works; the Dockerfile just pins Node 20 and the exact build steps
 After the service is **Healthy**:
 
 1. Visit the Koyeb URL → the homepage loads (no cold start — it stays awake).
-2. Visit `/api/health` → returns `{"success":true,"status":"ok",...}`.
+2. Visit `/api/health` → returns `{"success":true,"status":"ok","db":"ok",...}` (the `db:"ok"` confirms Neon is connected).
 3. Go to `/admin/login.html` → sign in with `ADMIN_EMAIL` / `ADMIN_PASSWORD`.
 4. Open **Users** → confirm your account shows role **super**.
 5. Submit a test enquiry on `/enquiry.html` → confirm it appears in **Admin → Enquiries**

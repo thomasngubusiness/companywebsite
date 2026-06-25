@@ -1,5 +1,5 @@
 /* =====================================================================
-   [Company] Security — Animations & scroll reveals
+   VNT Security — Animations & scroll reveals
    ===================================================================== */
 [data-reveal]{opacity:0;transform:translateY(26px);
   transition:opacity .7s var(--ease),transform .7s var(--ease)}

@@ -1,4 +1,4 @@
-/* [Company] Security — animations.js : scroll reveal + tilt + parallax */
+/* VNT Security — animations.js : scroll reveal + tilt + parallax */
 (function () {
   'use strict';
   var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;

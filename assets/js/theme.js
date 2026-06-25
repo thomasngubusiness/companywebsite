@@ -1,4 +1,4 @@
-/* [Company] Security — theme.js
+/* VNT Security — theme.js
    Auto day/night: light 07:00–18:59, dark otherwise. Re-checked every minute so
    an open tab flips at the boundary. The manual toggle sets a SESSION-only
    override (resets next visit) so the site keeps following the clock. */

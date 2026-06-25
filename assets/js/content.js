@@ -1,4 +1,4 @@
-/* [Company] Security — content.js
+/* VNT Security — content.js
    Pulls admin-managed content from /api/content and renders it into the
    public pages. If a section has no saved content, the page keeps its
    built-in (hardcoded) content as a fallback, so the site never looks empty. */

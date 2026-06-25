@@ -1,4 +1,4 @@
-/* [Company] Security — main.js : nav, scroll, counters, carousel */
+/* VNT Security — main.js : nav, scroll, counters, carousel */
 (function () {
   'use strict';
 

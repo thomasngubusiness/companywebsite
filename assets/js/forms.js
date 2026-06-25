@@ -1,4 +1,4 @@
-/* [Company] Security — forms.js : real-time validation + AJAX submit */
+/* VNT Security — forms.js : real-time validation + AJAX submit */
 (function () {
   'use strict';
 

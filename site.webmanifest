@@ -1,6 +1,6 @@
 {
-  "name": "[Company] Security",
-  "short_name": "[Company]",
+  "name": "VNT Security",
+  "short_name": "VNT",
   "description": "Offensive security testing, cloud security and managed defense for enterprises.",
   "start_url": "/",
   "display": "standalone",
